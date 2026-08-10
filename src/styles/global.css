@@ -1,0 +1,2693 @@
+﻿/* ============================================================
+   СВЕТЛЫЙ МИР + АВРОРА
+
+   Холодная бумага, почти белая — не бежевая. Два ярких акцента:
+   малиновый и электрический фиолет, плюс холодная мята третьим
+   голосом, чтобы сияние не было двухцветным.
+
+   Типографика крупная и со сбивкой: строки заголовка стоят
+   на разных отступах и наезжают на сияние. Там, где буква
+   ложится на цвет, она подхватывает его оттенок через
+   mix-blend-mode — это не эффект ради эффекта, а способ
+   связать текст и поле в одно изображение.
+   ============================================================ */
+
+:root {
+  --paper: #f4f4f8;
+  --paper-pure: #fff;
+  --paper-sink: #ebebf1;
+
+  --ink: #101018;
+  --ink-2: #55555f;
+  --ink-3: #8a8a96;
+
+  --hot: #ff2d6f;
+  --cool: #4b2bf5;
+  --mint: #00d4c8;
+
+  --rule: rgb(16 16 24 / 11%);
+  --rule-2: rgb(16 16 24 / 6%);
+
+  /* Пунктирный декор: близко к фону, но так, чтобы линию было видно
+     не только на светлом мониторе. Это карандашный след, а не линия
+     чертежа, поэтому от бумаги он уходит немного */
+  --doodle: #c6c6da;
+  --doodle-strong: #b0b0c9;
+
+  --font-display: 'Geologica Variable', system-ui, sans-serif;
+  --font-body: 'Onest Variable', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+
+  /* Крупно: референс, который она закрепила, работает на этом масштабе */
+  --step-hero: clamp(2rem, 5.8vw, 5.4rem);
+  --step-h2: clamp(1.9rem, 5vw, 4.2rem);
+  --step-h3: clamp(1.15rem, 1.8vw, 1.55rem);
+  --step-lede: clamp(1rem, 1.3vw, 1.22rem);
+  --step-body: 1.02rem;
+  --step-small: 0.875rem;
+  --step-label: 0.7rem;
+
+  --gutter: clamp(1.1rem, 4vw, 3rem);
+  --measure: 1400px;
+  --section-gap: clamp(5rem, 12vw, 11rem);
+
+  --ease: cubic-bezier(0.16, 0.9, 0.28, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: 5rem;
+  scrollbar-color: var(--ink-3) var(--paper);
+  scrollbar-width: thin;
+}
+
+body {
+  /* Точка отсчёта для пунктирного слоя: он тянется на всю высоту
+     документа, а без позиционированного предка мерил бы себя
+     по окну и обрывался бы на первом экране */
+  position: relative;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--step-body);
+  line-height: 1.6;
+  font-synthesis-weight: none;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+  caret-color: var(--hot);
+  overflow-x: hidden;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 0.22em;
+  text-decoration-thickness: 1px;
+}
+
+ul,
+ol {
+  list-style: none;
+  padding: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--cool);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+::selection {
+  background: var(--hot);
+  color: #fff;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--paper);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ink-3);
+  border: 3px solid var(--paper);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--hot);
+}
+
+/* ============================================================
+   УТИЛИТЫ
+   ============================================================ */
+
+.shell {
+  width: 100%;
+  max-width: var(--measure);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 300;
+  padding: 0.6rem 1rem;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: var(--step-small);
+  transform: translateY(-180%);
+  transition: transform 0.18s var(--ease);
+}
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+.note {
+  font-family: var(--font-mono);
+  font-size: var(--step-label);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* ============================================================
+   АВРОРА
+
+   Один холст на весь сайт, зафиксированный за содержимым.
+   Шар переезжает по секциям — см. src/aurora/stage.tsx.
+   ============================================================ */
+
+.aurora-stage {
+  position: fixed;
+  inset: 0;
+  /* Над пунктиром, под содержимым */
+  z-index: 1;
+  pointer-events: none;
+}
+
+.aurora-stage canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+@keyframes dash-run {
+  to {
+    stroke-dashoffset: -128;
+  }
+}
+
+/*
+   Пока идёт проверка, умеет ли машина WebGL2. Занимает доли секунды,
+   но первый экран за это время уже показан, и без пятна он выглядел
+   бы пустым белым листом.
+*/
+.aurora-stage--flat {
+  background:
+    radial-gradient(30% 26% at 50% 46%, rgb(255 45 111 / 26%), transparent 72%),
+    radial-gradient(34% 30% at 44% 40%, rgb(75 43 245 / 20%), transparent 74%),
+    radial-gradient(26% 24% at 58% 54%, rgb(34 201 232 / 18%), transparent 72%),
+    radial-gradient(40% 34% at 50% 48%, rgb(255 216 236 / 34%), transparent 78%);
+}
+
+/*
+   ШАР БЕЗ WEBGL
+
+   Нет WebGL2 или человек просил меньше движения. Место, размер и цвет
+   приходят из той же таблицы секций, что и у сцены, — см. aurora/flat.tsx,
+   он пишет их прямо в стиль. Здесь только сама краска.
+
+   Слоёв четыре, и порядок в них обратный порядку взгляда: сначала
+   объявляется то, что лежит сверху. Блик, потом акцент секции, потом
+   плёнка, потом кромка. У настоящего шара всё это считает луч внутри
+   плёнки; повторить его нечем, но узнаваемым шар делают не переливы,
+   а круг с мягким краем, светлым верхом и плотной серединой.
+
+   У каждого слоя стоит closest-side, и это здесь не украшательство,
+   а единственное, что даёт кромку. По умолчанию радиальный градиент
+   меряется до дальнего угла рамки, а рамка у круга квадратная: её
+   угол лежит в полтора раза дальше кромки. Краска на кромке до нуля
+   не доходила, и её срезало скруглением — по кругу шла ровная линия,
+   и он читался наклейкой. С closest-side градиент кончается ровно
+   там, где кончается круг, и срезать нечего.
+
+   Плотность держится почти до края и падает на последней десятой:
+   у настоящего шара край определённый, просто мягкий, и расплывшееся
+   пятно вместо него — это ровно то, на что жаловались.
+*/
+.orbflat {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  /* Слой отдаётся видеокарте один раз: дальше меняется только
+     translate3d, а он не требует перерисовки */
+  will-change: transform;
+  background:
+    radial-gradient(
+      circle closest-side at 38% 30%,
+      rgb(255 255 255 / 60%) 0%,
+      rgb(255 255 255 / 0%) 62%
+    ),
+    radial-gradient(
+      circle closest-side at 58% 66%,
+      rgb(var(--a, 255 255 255) / var(--ta, 0%)) 0%,
+      rgb(var(--a, 255 255 255) / 0%) 78%
+    ),
+    radial-gradient(
+      circle closest-side at 50% 50%,
+      rgb(255 45 111 / 42%) 0%,
+      rgb(139 92 246 / 40%) 44%,
+      rgb(75 43 245 / 34%) 82%,
+      rgb(75 43 245 / 26%) 92%,
+      rgb(75 43 245 / 0%) 100%
+    ),
+    radial-gradient(
+      circle closest-side at 50% 50%,
+      rgb(255 216 236 / 46%) 0%,
+      rgb(255 216 236 / 34%) 86%,
+      rgb(255 216 236 / 0%) 100%
+    );
+}
+
+/* Содержимое живёт над холстом */
+main,
+.header,
+.footer {
+  position: relative;
+  z-index: 2;
+}
+
+/* ============================================================
+   СДВИГ БЛОКОВ
+
+   Секции стоят не по центру, а прижаты к краю — тому,
+   от которого в этот момент уехал шар.
+   ============================================================ */
+
+.side > * {
+  max-width: 68%;
+}
+
+/* Секции, где нужно фото в полный голос: капля в этот момент уже
+   почти за краем экрана, и отдавать ей треть ширины незачем */
+.side--wide > * {
+  max-width: 84%;
+}
+
+.side--right > * {
+  margin-left: auto;
+}
+
+@media (max-width: 1100px) {
+  .side > *,
+  .side--wide > * {
+    max-width: 100%;
+  }
+  .side--right > * {
+    margin-left: 0;
+  }
+}
+
+/* ============================================================
+   ШАПКА
+   ============================================================ */
+
+.header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 100;
+  pointer-events: none;
+}
+
+/*
+  Подложка под шапкой. Она закреплена и висит над содержимым, поэтому
+  на длинных страницах текст проезжает прямо под именем и обе надписи
+  накладываются друг на друга. Прямая плашка тут не годится: у неё
+  видна нижняя граница, и шапка отделяется от страницы полосой.
+  Растворяющийся книзу слой закрывает буквы и сам границы не имеет.
+*/
+.header::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 -2.5rem 0;
+  background: linear-gradient(
+    to bottom,
+    var(--paper) 0%,
+    rgb(244 244 248 / 92%) 42%,
+    rgb(244 244 248 / 0%) 100%
+  );
+  pointer-events: none;
+}
+
+.header__inner {
+  position: relative;
+}
+
+.header__inner {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding-block: 1.35rem;
+}
+
+.header a,
+.header button {
+  pointer-events: auto;
+}
+
+.header__name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-decoration: none;
+  mix-blend-mode: multiply;
+}
+
+.header__city {
+  font-family: var(--font-mono);
+  font-size: var(--step-label);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.header__right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+}
+
+.lang {
+  display: inline-flex;
+  gap: 0.4rem;
+  font-family: var(--font-mono);
+  font-size: var(--step-label);
+  letter-spacing: 0.1em;
+}
+
+.lang__btn {
+  border: 0;
+  background: none;
+  padding: 0.2rem 0.1rem;
+  cursor: pointer;
+  color: var(--ink-3);
+  text-decoration: none;
+  transition: color 0.2s var(--ease);
+}
+/* Переключатель стал парой ссылок: у английской версии свои адреса,
+   и без ссылки на них поиск о ней не узнает. Текущий язык помечен
+   aria-current, а не aria-pressed — у ссылки нет нажатого состояния */
+.lang__btn[aria-current] {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+  text-decoration-color: var(--hot);
+  text-decoration-thickness: 2px;
+}
+.lang__btn:hover {
+  color: var(--ink);
+}
+
+/* ============================================================
+   ПЕРВЫЙ ЭКРАН
+   ============================================================ */
+
+.hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* Нижний отступ большой не ради воздуха: свечение под строкой
+     вопроса выходит за неё вниз, а первый экран обрезает всё,
+     что вылезло за край. Без запаса свечение срезало ровной линией */
+  padding-block: 5.5rem 7rem;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.hero__inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+}
+
+/* Заголовок: строки собраны вокруг центра, но ни одна не стоит ровно
+   по нему. Буквы ложатся на сияние и подхватывают его цвет через
+   multiply — так текст и капля становятся одним изображением,
+   а не картинкой с надписью поверх. */
+.hero__headline {
+  font-family: var(--font-display);
+  font-size: var(--step-hero);
+  font-weight: 200;
+  line-height: 0.86;
+  letter-spacing: -0.055em;
+  text-transform: uppercase;
+  text-align: center;
+  mix-blend-mode: multiply;
+  margin-bottom: clamp(1rem, 2.5vw, 2rem);
+}
+
+/* Сдвиг, кегль и наклон приходят из данных: --offset, --scale, --rot.
+   Сдвиг считается от центра, поэтому композиция остаётся уравновешенной
+   при любой ширине экрана. */
+.hero__line {
+  display: block;
+  overflow: hidden;
+  padding-block: 0.05em;
+  font-size: calc(1em * var(--scale, 1));
+  line-height: 0.84;
+  transform: translateX(var(--offset, 0)) rotate(var(--rot, 0deg));
+}
+
+.hero__line > span {
+  display: block;
+  transform: translateY(112%);
+  transition: transform 1.2s var(--ease-out);
+  transition-delay: calc(var(--i) * 120ms);
+}
+
+.hero__headline.is-in .hero__line > span {
+  transform: none;
+}
+
+/* Контурный набор: два слова из четырёх. Обводка толще, чем кажется
+   нужным, — под ней проходит сияние, и тонкая линия на нём тонет.
+
+   Толщина задана долей кегля, а не пикселями, и это не педантизм.
+   Жёсткие два пикселя на мониторе приходились на букву в семьдесят
+   пикселей — тонкий контур. На телефоне та же двойка приходилась на
+   букву в двадцать пять, то есть была втрое толще относительно
+   буквы: обводка съедала просветы внутри знаков, слово заливалось
+   чёрным и читалось другой, жирной и узкой гарнитурой. Отсюда и
+   бралось «шрифт заголовка с телефона другой».
+
+   Потолок в два пикселя оставлен, чтобы на мониторе не изменилось
+   ничего: там доля упирается в него и даёт ровно прежние два. */
+.hero__outline {
+  color: transparent;
+  -webkit-text-stroke: clamp(0.85px, 0.03em, 2px) var(--ink);
+  paint-order: stroke fill;
+}
+
+/*
+   Подводка. Читать по сияющему шару нельзя, но и плашка не годится:
+   у неё есть край, и этот край спорит с кругом. Поэтому подложка —
+   размывка бумаги, которая гаснет к краям и не образует границы.
+
+   Размытия backdrop-filter тут нет сознательно: подложка висит над
+   холстом, который перерисовывается каждый кадр, и браузер считал бы
+   размытие тоже каждый кадр. Это была часть рывков при прокрутке.
+*/
+.hero__meta {
+  position: relative;
+  z-index: 2;
+  max-width: 46rem;
+  margin-inline: auto;
+  padding: clamp(2.2rem, 4vw, 3.2rem) clamp(2rem, 6vw, 5rem);
+  text-align: center;
+  /* Эллипс ровно по размеру блока: прозрачность доходит до нуля на
+     всех его краях сразу. Стоит сделать эллипс хоть немного больше —
+     и на границе блока появляется прямая линия, ровно та, ради
+     отсутствия которой плашку и убрали */
+  /* Плотность подтёса подобрана по нижней границе читаемости, а не
+     с запасом: этот эллипс лежит прямо на шаре и всё, что он гасит
+     сверх нужного, — это цвет, ради которого шар и сделан */
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgb(246 246 250 / 82%) 0%,
+    rgb(246 246 250 / 66%) 52%,
+    rgb(246 246 250 / 0%) 100%
+  );
+  opacity: 0;
+  transform: translateY(12px);
+  /* Задержка была 620 мс, и стоила она дорого. Этот абзац — самый
+     крупный текст первого экрана, то есть ровно тот элемент, по
+     которому Google меряет скорость показа страницы (LCP). Пока его
+     прозрачность равна нулю, браузер считает, что показывать ещё
+     нечего, и отсчёт идёт. Полсекунды ожидания попадали в оценку
+     целиком, хотя текст всё это время уже лежал готовый.
+
+     260 мс сохраняют очерёдность: строки заголовка успевают тронуться
+     с места раньше, чем проступает подводка. Разницу на глаз видно
+     едва, в измерении — на полсекунды. */
+  transition:
+    opacity 0.9s var(--ease-out) 260ms,
+    transform 0.9s var(--ease-out) 260ms;
+}
+.hero__meta.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Утверждение — крупно и в дисплейной гарнитуре: это тезис страницы,
+   а не пояснительный абзац */
+.hero__claim {
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 1.9vw, 1.65rem);
+  font-weight: 350;
+  line-height: 1.28;
+  letter-spacing: -0.018em;
+  text-wrap: balance;
+  max-width: 30ch;
+  margin-inline: auto;
+}
+
+.hero__detail {
+  margin-top: 0.7rem;
+  color: var(--ink-2);
+  font-size: var(--step-lede);
+  line-height: 1.55;
+  text-wrap: balance;
+  max-width: 46ch;
+  margin-inline: auto;
+}
+
+/* Приглашение к строке вопроса. Стрелка ведёт руку вниз — она здесь
+   указатель, а не украшение, поэтому и нарисована, а не набрана
+   символом из шрифта */
+/* Разрядка и капитель тут были бы уместны на подписи, но эта строка
+   зовёт к действию, и её надо прочитать с первого взгляда. Поэтому
+   обычный регистр, обычная гарнитура и контраст основного текста */
+.hero__invite {
+  display: inline-flex;
+  align-items: center;
+  /* Стрелка не должна отрываться от строки при переносе: она здесь
+     указатель на строку вопроса ниже, а не значок сам по себе */
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  margin-top: clamp(1rem, 2.5vw, 1.5rem);
+  font-size: var(--step-small);
+  color: var(--ink-2);
+}
+
+.hero__invite svg {
+  animation: nudge 2.4s var(--ease-out) infinite;
+}
+
+@keyframes nudge {
+  0%,
+  62%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.55;
+  }
+  78% {
+    transform: translateY(3px);
+    opacity: 1;
+  }
+}
+
+/* ============================================================
+   БЛОК С ИИ — светящаяся пилюля
+   ============================================================ */
+
+.ask {
+  position: relative;
+  width: min(100%, 44rem);
+  margin-inline: auto;
+  margin-top: clamp(1.75rem, 4vw, 3rem);
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 0.9s var(--ease-out) 760ms,
+    transform 0.9s var(--ease-out) 760ms;
+}
+.ask.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Свечение — широкая мягкая подложка ВО ВСЮ длину строки, уходящая
+   вниз, а не пятно под серединой. Цветные зоны стоят по горизонтали
+   через равные промежутки и перетекают друг в друга, поэтому полоса
+   читается как одна заливка, а не как четыре лампочки.
+
+   Плотнее всего у самой пилюли и тает книзу — свет так и ведёт себя.
+   Маска взята эллипсом от верхнего центра: она гасит и низ, и оба
+   торца одним градиентом, поэтому у полосы нигде нет прямого края.
+
+   Второй холст WebGL тут стоил бы дороже, чем выглядит на глаз. */
+.ask__glow {
+  position: absolute;
+  left: 50%;
+  translate: -50% 0;
+  /* Отсчёт от верха, а не в процентах: высота .ask плавает вместе
+     с подсказками и ответом, и в процентах свечение уезжало бы
+     от строки тем дальше, чем длиннее ответ */
+  top: 1.5rem;
+  width: 110%;
+  height: 8.5rem;
+  z-index: 0;
+  pointer-events: none;
+  filter: blur(32px);
+  opacity: 0.78;
+  /* Маски здесь нет сознательно. Маска обрезает уже размытую
+     картинку, и на её собственном крае появляется вторая, резкая
+     граница — это и было то самое «облезает». Пятна вместо этого
+     гаснут сами: радиусы меньше половины блока, поэтому до краёв
+     цвет просто не доходит. И гаснут они в свой же оттенок с нулевой
+     прозрачностью, а не в «transparent»: прозрачный по умолчанию
+     чёрный, и на переходе к нему по краям ложится серая кайма */
+  background:
+    radial-gradient(34% 44% at 13% 24%, rgb(255 176 58 / 62%), rgb(255 176 58 / 0%) 100%),
+    radial-gradient(36% 48% at 37% 20%, rgb(255 45 111 / 64%), rgb(255 45 111 / 0%) 100%),
+    radial-gradient(36% 48% at 63% 22%, rgb(139 92 246 / 60%), rgb(139 92 246 / 0%) 100%),
+    radial-gradient(34% 44% at 87% 24%, rgb(75 43 245 / 50%), rgb(75 43 245 / 0%) 100%);
+  animation: glow-drift 18s ease-in-out infinite alternate;
+}
+
+/* Дрейф только вдоль строки: вертикальное движение читалось бы как
+   дрожание, а горизонтальное — как перетекание цвета */
+@keyframes glow-drift {
+  0% {
+    transform: translate3d(-1.6%, 0, 0);
+  }
+  100% {
+    transform: translate3d(1.6%, 0, 0);
+  }
+}
+
+.ask__form {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--paper-pure);
+  border-radius: 999px;
+  padding: 0.55rem 0.6rem 0.55rem 1.5rem;
+  box-shadow:
+    0 1px 2px rgb(16 16 24 / 5%),
+    0 12px 34px -12px rgb(16 16 24 / 18%);
+  transition: box-shadow 0.35s var(--ease);
+}
+
+.ask__form:focus-within {
+  box-shadow:
+    0 1px 2px rgb(16 16 24 / 6%),
+    0 18px 44px -14px rgb(75 43 245 / 34%);
+}
+
+.ask__input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  padding: 0.45rem 0;
+  font-size: clamp(1rem, 1.25vw, 1.12rem);
+}
+.ask__input::placeholder {
+  color: var(--ink-3);
+}
+.ask__input:focus {
+  outline: none;
+}
+
+.ask__send {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  flex: none;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper-pure);
+  cursor: pointer;
+  transition:
+    background 0.25s var(--ease),
+    transform 0.25s var(--ease);
+}
+.ask__send:hover:not(:disabled) {
+  background: var(--hot);
+  transform: scale(1.05);
+}
+.ask__send:disabled {
+  opacity: 0.28;
+  cursor: default;
+}
+
+.ask__spinner {
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid rgb(255 255 255 / 35%);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ask__suggestions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 0.85rem;
+}
+
+.ask__chip {
+  border: 1px solid var(--rule);
+  background: rgb(255 255 255 / 88%);
+  color: var(--ink-2);
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  font-size: var(--step-small);
+  cursor: pointer;
+  transition:
+    border-color 0.25s var(--ease),
+    color 0.25s var(--ease),
+    transform 0.25s var(--ease);
+}
+.ask__chip:hover {
+  border-color: var(--cool);
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+
+.ask__answer {
+  position: relative;
+  z-index: 1;
+  margin-top: 1rem;
+  padding: 1rem 1.25rem;
+  background: rgb(255 255 255 / 94%);
+  border-radius: 1.25rem;
+  font-size: var(--step-body);
+  max-width: 62ch;
+  margin-inline: auto;
+  text-align: left;
+  box-shadow: 0 10px 30px -18px rgb(16 16 24 / 28%);
+}
+
+.ask__note {
+  margin-top: 0.6rem;
+  font-size: var(--step-small);
+  color: var(--ink-3);
+}
+
+/* ============================================================
+   СЕКЦИИ
+   ============================================================ */
+
+.section {
+  padding-block: var(--section-gap);
+  position: relative;
+}
+
+/* Заголовок и подводка стоят в тех же колонках, что и строки
+   проектов ниже: название — слева, пояснение — во второй колонке.
+   Поэтому подводка начинается ровно над мини-описаниями. */
+.section__head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr) 2.75rem;
+  gap: clamp(1rem, 3vw, 2.5rem);
+  align-items: end;
+  margin-bottom: clamp(2.5rem, 6vw, 4.5rem);
+}
+
+.section__title {
+  font-family: var(--font-display);
+  font-weight: 200;
+  font-size: var(--step-h2);
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
+}
+
+.section__lede {
+  font-size: var(--step-lede);
+  color: var(--ink-2);
+  /* Ширина подобрана так, чтобы текст лёг ровно в две строки
+     и не расползался на три при длинной формулировке */
+  max-width: 42ch;
+  text-wrap: balance;
+}
+
+/* ============================================================
+   ПРОЕКТЫ — крупные строки, а не сетка карточек
+   ============================================================ */
+
+.worklist {
+  border-top: 1px solid var(--rule);
+}
+
+.workrow {
+  --c: var(--ink);
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr) auto;
+  gap: clamp(1rem, 3vw, 2.5rem);
+  align-items: center;
+  padding-block: clamp(1.4rem, 2.6vw, 2.2rem);
+  border-bottom: 1px solid var(--rule);
+  text-decoration: none;
+}
+
+/* Строка подаётся вправо под курсором.
+   Двигаются подписи, а не сама строка: сдвиг отступа у сетки заставляет
+   браузер пересчитывать раскладку всего ряда на каждом кадре, а сдвиг
+   содержимого не трогает раскладку вовсе. Выглядит одинаково.
+   Стрелка остаётся на месте — она отмечает край строки, и уезжающая
+   вместе с текстом стрелка ломает эту роль */
+@media (hover: hover) {
+  .workrow__name,
+  .workrow__tagline {
+    transition: transform 0.45s var(--ease-out);
+  }
+
+  .workrow:hover .workrow__name,
+  .workrow:hover .workrow__tagline {
+    transform: translateX(1.25rem);
+  }
+}
+
+/* Цветная полоса выезжает слева при наведении */
+.workrow::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--c);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.45s var(--ease-out);
+}
+/*
+   ЭФФЕКТЫ КУРСОРА — ТОЛЬКО ТАМ, ГДЕ ЕСТЬ КУРСОР
+
+   На сенсорном экране наведения не существует, а браузер его всё
+   равно изображает: после касания строка остаётся подсвеченной,
+   сдвинутой и перекрашенной, пока не тронешь другую. Выглядит это
+   так, будто нажатие не сработало.
+
+   Проверка `hover: hover` отвечает не «широкий ли экран», а «есть ли
+   у устройства настоящий указатель». Планшет с мышью получит эффекты,
+   ноутбук с сенсорным экраном — тоже; телефон нет. Заодно это снимает
+   с телефона четыре анимации на каждой из семи строк.
+*/
+@media (hover: hover) {
+  .workrow:hover::before {
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+}
+
+.workrow__name {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(1.5rem, 3.4vw, 2.9rem);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  transition: color 0.35s var(--ease);
+}
+
+@media (hover: hover) {
+  .workrow:hover .workrow__name {
+    color: var(--c);
+  }
+}
+
+.workrow__tagline {
+  color: var(--ink-2);
+  font-size: var(--step-small);
+  max-width: 40ch;
+}
+
+.workrow__go {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--rule);
+  color: var(--ink-2);
+  flex: none;
+  transition:
+    background 0.35s var(--ease),
+    color 0.35s var(--ease),
+    border-color 0.35s var(--ease),
+    transform 0.35s var(--ease-out);
+}
+
+@media (hover: hover) {
+  .workrow:hover .workrow__go {
+    background: var(--c);
+    border-color: var(--c);
+    color: #fff;
+    transform: rotate(-45deg);
+  }
+}
+
+/* Превью всплывает у курсора — приём с референса */
+.workpeek {
+  position: fixed;
+  z-index: 60;
+  width: 22rem;
+  aspect-ratio: 16 / 10;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.94);
+  transition:
+    opacity 0.3s var(--ease),
+    transform 0.45s var(--ease-out);
+  box-shadow: 0 30px 70px -30px rgb(16 16 24 / 45%);
+}
+.workpeek.is-on {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+.workpeek img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+/* ============================================================
+   СТРАНИЦА ПРОЕКТА
+   ============================================================ */
+
+.pagehead {
+  position: relative;
+  padding-block: 8rem clamp(2.5rem, 6vw, 5rem);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.pagehead__inner {
+  position: relative;
+  z-index: 2;
+}
+
+.pagehead__title {
+  font-family: var(--font-display);
+  font-weight: 200;
+  font-size: clamp(2.6rem, 8vw, 7rem);
+  line-height: 0.88;
+  letter-spacing: -0.05em;
+  text-transform: uppercase;
+  mix-blend-mode: multiply;
+}
+
+/* Заголовок служебной страницы. Прописные в семь рем годятся
+   названию проекта из одного слова; «Политика обработки персональных
+   данных» в них превращается в шесть строк капслока, которые никто
+   не читает, а разбирает по буквам */
+.pagehead__title--plain {
+  font-size: clamp(1.9rem, 4.4vw, 3.2rem);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  text-transform: none;
+  max-width: 22ch;
+}
+
+.pagehead__tagline {
+  font-size: var(--step-lede);
+  color: var(--ink-2);
+  max-width: 48ch;
+  margin-top: 1.25rem;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: var(--step-label);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--ink-2);
+  margin-bottom: 2rem;
+  transition: gap 0.25s var(--ease);
+}
+.back:hover {
+  gap: 0.85rem;
+  color: var(--ink);
+}
+
+.detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 18rem);
+  gap: clamp(1.5rem, 5vw, 4.5rem);
+  align-items: start;
+}
+
+.detail__summary {
+  font-size: clamp(1.05rem, 1.5vw, 1.3rem);
+  line-height: 1.55;
+  color: var(--ink);
+  max-width: 62ch;
+}
+
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  border-left: 1px solid var(--rule);
+  padding-left: 1.5rem;
+}
+
+.fact__label {
+  font-family: var(--font-mono);
+  font-size: var(--step-label);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.fact__value {
+  font-size: var(--step-small);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.chip {
+  font-family: var(--font-mono);
+  font-size: var(--step-label);
+  padding: 0.24rem 0.5rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.75rem 1.35rem;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper-pure);
+  text-decoration: none;
+  font-size: var(--step-small);
+  transition:
+    background 0.3s var(--ease),
+    gap 0.3s var(--ease);
+}
+.cta:hover {
+  background: var(--c, var(--hot));
+  gap: 0.95rem;
+}
+
+.closed {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  font-size: var(--step-small);
+  color: var(--ink-2);
+  border: 1px dashed var(--rule);
+  border-radius: 0.75rem;
+  padding: 0.7rem 1rem;
+  max-width: 44ch;
+}
+
+/* Блоки «что внутри» на странице проекта */
+.deep {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: clamp(1.25rem, 3vw, 2.5rem);
+}
+
+.deep__item {
+  border-top: 1px solid var(--rule);
+  padding-top: 1.1rem;
+}
+
+/* Номер разбора и общее их число. Моноширинный набор здесь по делу:
+   цифры одной ширины выстраиваются в столбик по всей сетке */
+.deep__num {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--step-label);
+  letter-spacing: 0.08em;
+  color: var(--c, var(--ink));
+  margin-bottom: 0.6rem;
+}
+
+.deep__of {
+  color: var(--ink-3);
+}
+
+.deep__title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--step-h3);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.55rem;
+}
+
+.deep__text {
+  color: var(--ink-2);
+  font-size: var(--step-small);
+  line-height: 1.6;
+}
+
+/* ============================================================
+   СТРАНИЦА, КОТОРОЙ НЕТ
+   ============================================================ */
+
+.lost {
+  min-height: 72vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: clamp(6rem, 14vw, 11rem) clamp(3rem, 7vw, 6rem);
+}
+
+/* Номер набран тонким контуром, а не заливкой: сплошная цифра такого
+   кегля становится главным предметом на странице, а главное здесь —
+   дорога дальше, а не сама ошибка */
+.lost__code {
+  font-family: var(--font-display);
+  font-size: clamp(5rem, 17vw, 15rem);
+  font-weight: 200;
+  line-height: 0.8;
+  letter-spacing: -0.06em;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--ink-3);
+  margin-bottom: clamp(1rem, 3vw, 2rem);
+}
+
+.lost__title {
+  font-family: var(--font-display);
+  font-weight: 250;
+  font-size: var(--step-h2);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  max-width: 16ch;
+}
+
+.lost__lede {
+  margin-top: 1.2rem;
+  font-size: var(--step-lede);
+  color: var(--ink-2);
+  max-width: 46ch;
+  text-wrap: balance;
+}
+
+.lost__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.lost__work {
+  padding-bottom: clamp(4rem, 10vw, 8rem);
+}
+
+.lost__subtitle {
+  font-family: var(--font-mono);
+  font-size: var(--step-label);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 1rem;
+}
+
+.lost__list {
+  border-top: 1px solid var(--rule);
+  max-width: 52rem;
+}
+
+.lost__list a {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 0.3rem clamp(1rem, 3vw, 2.5rem);
+  align-items: baseline;
+  padding-block: 1rem;
+  border-bottom: 1px solid var(--rule);
+  text-decoration: none;
+  transition: color 0.25s var(--ease);
+}
+
+.lost__list a:hover {
+  color: var(--cool);
+}
+
+.lost__name {
+  font-family: var(--font-display);
+  font-size: var(--step-h3);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+}
+
+.lost__tagline {
+  font-size: var(--step-small);
+  color: var(--ink-2);
+}
+
+@media (width < 40rem) {
+  .lost__list a {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   СОГЛАСИЕ НА АНАЛИТИКУ
+   ============================================================ */
+
+/* Затемнение с размытием, а не сплошная заливка: сайт под окном
+   остаётся узнаваемым, и человек видит, куда попал, ещё до того,
+   как ответит */
+.consent {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: grid;
+  place-items: center;
+  padding: var(--gutter);
+  background: rgb(16 16 24 / 34%);
+  backdrop-filter: blur(6px);
+  animation: consent-veil 0.4s var(--ease-out) both;
+}
+
+.consent__box {
+  width: min(34rem, 100%);
+  padding: clamp(1.6rem, 4vw, 2.4rem);
+  border-radius: 1.25rem;
+  background: var(--paper-pure);
+  box-shadow: 0 40px 80px -40px rgb(16 16 24 / 55%);
+  animation: consent-rise 0.45s var(--ease-out) both;
+}
+
+@keyframes consent-veil {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes consent-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+  }
+}
+
+/* Заголовок сухой и мелкий, как подпись к документу: окно сообщает
+   о правилах, а не продаёт себя */
+.consent__eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--step-label);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  /* --ink-3 на белом окне даёт 3.4:1 — ниже нормы для текста такого
+     кегля. Это заголовок окна, мимо которого пройти нельзя, и читать
+     его должно быть можно при любом зрении и на любом экране */
+  color: var(--ink-2);
+  margin-bottom: 1rem;
+}
+
+.consent__text {
+  font-size: var(--step-lede);
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.consent__note {
+  margin-top: 0.9rem;
+  font-size: var(--step-small);
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.consent__link {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+  text-decoration-color: var(--rule);
+}
+.consent__link:hover {
+  text-decoration-color: var(--hot);
+}
+
+/* Кнопки одного размера и рядом. Крупное «принять» и серая ссылка
+   «отклонить» под ним — это не выбор, а подсказка, что выбирать */
+.consent__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.6rem;
+}
+
+.consent__row .btn {
+  flex: 1 1 9rem;
+  justify-content: center;
+  padding-block: 0.7rem;
+}
+
+/* Ролик прохода по живому сайту. Рамка та же, что у скриншотов:
+   это тот же сайт, просто в движении, и разводить их по разным
+   оформлениям значило бы делать вид, что это разные вещи */
+.clip {
+  margin: 0 0 clamp(1rem, 2.5vw, 2rem);
+}
+
+.clip__frame {
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: var(--paper-pure);
+  box-shadow: 0 30px 60px -34px rgb(16 16 24 / 38%);
+  border: 1px solid var(--rule);
+}
+
+.clip__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.6rem 0.85rem;
+  border-bottom: 1px solid var(--rule-2);
+  background: var(--paper-sink);
+}
+
+.clip__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--rule);
+}
+
+.clip video {
+  width: 100%;
+  display: block;
+  /* Пропорция задана заранее: без неё блок схлопывается в ноль,
+     пока файл не подгрузился, и вся страница под ним подпрыгивает
+     в момент появления ролика */
+  aspect-ratio: 16 / 9;
+  background: var(--paper-sink);
+  object-fit: cover;
+}
+
+/* Кадры: десктоп в рамке браузера, мобильные — в телефоне */
+.frames {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(1rem, 2.5vw, 2rem);
+  align-items: flex-start;
+}
+
+/* Раскладкой заведует figure, а не рамка внутри неё: гибкие правила
+   на вложенном элементе флексбокс не видит, и каждая figure тянулась
+   по своей картинке — в 1440 пикселей, то есть на всю строку */
+.frames__item {
+  margin: 0;
+  flex: 1 1 28rem;
+  min-width: min(100%, 20rem);
+  max-width: 100%;
+}
+
+/* Кнопка «рассмотреть кадр». На мониторе её нет: там кадр и так
+   виден в натуральную величину, разглядывать нечего */
+.shot__zoom {
+  display: none;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.55rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: var(--step-label);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  cursor: pointer;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.15rem;
+}
+.shot__zoom:hover {
+  color: var(--ink);
+  border-bottom-color: var(--hot);
+}
+
+.frames__item--lead {
+  flex: 1 1 100%;
+}
+
+.frames__item--phone {
+  flex: 0 0 auto;
+}
+
+.frame-desktop {
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: var(--paper-pure);
+  box-shadow: 0 30px 60px -34px rgb(16 16 24 / 38%);
+  border: 1px solid var(--rule);
+}
+
+.frame-desktop__bar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.6rem 0.85rem;
+  border-bottom: 1px solid var(--rule-2);
+  background: var(--paper-sink);
+}
+
+.frame-desktop__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--rule);
+}
+
+.frame-desktop img {
+  width: 100%;
+  display: block;
+}
+
+.frame-phone {
+  flex: 0 0 auto;
+  width: clamp(13rem, 20vw, 16rem);
+  border-radius: 2.25rem;
+  padding: 0.55rem;
+  background: var(--ink);
+  box-shadow: 0 30px 60px -30px rgb(16 16 24 / 50%);
+}
+
+.frame-phone__screen {
+  border-radius: 1.85rem;
+  overflow: hidden;
+  background: var(--paper-pure);
+  aspect-ratio: 9 / 19.5;
+  position: relative;
+}
+
+.frame-phone__screen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.frame-phone__notch {
+  position: absolute;
+  top: 0.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32%;
+  height: 1.15rem;
+  border-radius: 999px;
+  background: var(--ink);
+  z-index: 2;
+}
+
+/* Подпись набирается обычным текстом, а не капслоком с разрядкой:
+   капслок годится для трёх слов, а здесь подпись объясняет решение
+   и идёт целым предложением — в верхнем регистре его перестают
+   читать и начинают пролистывать */
+.frame-caption {
+  font-size: var(--step-small);
+  line-height: 1.5;
+  color: var(--ink-3);
+  margin-top: 0.7rem;
+  max-width: 34rem;
+}
+
+/* ============================================================
+   ОБО МНЕ / КОНТАКТЫ / ПОДВАЛ
+   ============================================================ */
+
+.about {
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1fr);
+  gap: clamp(1.75rem, 5vw, 4.5rem);
+  align-items: start;
+}
+
+.about__portrait {
+  overflow: hidden;
+  border-radius: 1.25rem;
+  background: var(--paper-sink);
+}
+
+.about__portrait img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+}
+
+.about__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.about__text p {
+  color: var(--ink-2);
+  font-size: var(--step-lede);
+  line-height: 1.6;
+  max-width: 66ch;
+}
+
+/* ============================================================
+   СИЛЬНЫЕ СТОРОНЫ
+
+   Список утверждений, а не абзацы: каждое нужно уметь найти
+   глазами по отдельности. Заголовок пункта набран дисплейным
+   шрифтом и держит строку целиком — он и есть само утверждение,
+   а текст под ним только доказательство.
+   ============================================================ */
+
+.strengths {
+  margin-top: clamp(3rem, 7vw, 5.5rem);
+  border-top: 1px solid var(--rule);
+  padding-top: clamp(1.75rem, 4vw, 3rem);
+}
+
+.strengths__title {
+  font-family: var(--font-mono);
+  font-size: var(--step-label);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.strengths__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1.75rem, 4vw, 3.25rem);
+}
+
+.strength__title {
+  font-family: var(--font-display);
+  font-size: var(--step-h3);
+  font-weight: 350;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.7rem;
+  text-wrap: balance;
+}
+
+.strength__detail {
+  color: var(--ink-2);
+  line-height: 1.62;
+  max-width: 46ch;
+}
+
+@media (max-width: 900px) {
+  .strengths__list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.contact {
+  position: relative;
+  padding-block: var(--section-gap);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Финальный блок — по центру, под ним встаёт шар */
+.contact__inner {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.contact__lede {
+  margin-top: 1.1rem;
+  margin-inline: auto;
+}
+
+/* Что можно заказать. Пунктами в строку, а не карточками: это
+   перечисление, и карточки придали бы ему вес прайс-листа */
+.services {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1.7rem;
+  margin-top: clamp(1.5rem, 3vw, 2.25rem);
+  /* Ни капители, ни разрядки, ни моноширинного: это перечисление
+     услуг, его читают, а не разглядывают. В прежнем наборе оно
+     превращалось в орнамент, который глаз пропускал */
+  font-size: var(--step-small);
+  color: var(--ink-2);
+}
+
+.services__item {
+  position: relative;
+}
+
+.services__item + .services__item::before {
+  content: '';
+  position: absolute;
+  left: -0.9rem;
+  top: 50%;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--hot);
+  transform: translateY(-50%);
+}
+
+.contact__label {
+  display: block;
+  margin-top: clamp(2rem, 5vw, 3.5rem);
+  margin-bottom: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: var(--step-label);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.contact__label--second {
+  margin-top: 1.4rem;
+}
+
+.contact__mail {
+  margin-top: 0;
+}
+
+/* Почта вторым голосом: она не спорит с телеграмом за первый взгляд,
+   но остаётся на виду для тех, кому мессенджер не подходит */
+.contact__second {
+  display: block;
+  font-size: var(--step-lede);
+  color: var(--ink-2);
+}
+.contact__second:hover {
+  color: var(--ink);
+}
+
+/* Переход к следующему проекту: крупной строкой, как в самом списке,
+   чтобы связь между страницей и списком читалась сразу */
+.nextwork {
+  display: block;
+  padding: clamp(1.75rem, 4vw, 2.75rem) 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  text-decoration: none;
+}
+
+/* Тот же приём, что в списке проектов: едет содержимое, а не отступ */
+.nextwork__label,
+.nextwork__name,
+.nextwork__tagline {
+  transition: transform 0.4s var(--ease);
+}
+.nextwork:hover .nextwork__label,
+.nextwork:hover .nextwork__name,
+.nextwork:hover .nextwork__tagline {
+  transform: translateX(1rem);
+}
+
+.nextwork__label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--step-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 0.7rem;
+}
+
+.nextwork__name {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--step-h2);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  transition: color 0.3s var(--ease);
+}
+.nextwork:hover .nextwork__name {
+  color: var(--c, var(--hot));
+}
+
+.nextwork__tagline {
+  display: block;
+  margin-top: 0.7rem;
+  font-size: var(--step-small);
+  color: var(--ink-2);
+}
+
+/* Хвост страницы проекта: связь и возврат */
+.pageend {
+  padding-block: clamp(3rem, 7vw, 5.5rem) clamp(4rem, 9vw, 7rem);
+  border-top: 1px solid var(--rule);
+}
+
+.pageend__lede {
+  font-size: var(--step-lede);
+  color: var(--ink-2);
+  max-width: 46ch;
+  text-wrap: balance;
+}
+
+.pageend__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+}
+
+.pageend__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-top: clamp(2rem, 5vw, 3rem);
+  font-size: var(--step-small);
+  color: var(--ink-3);
+}
+/* Выравнивание по центру: кнопка выше строчки, и по общей верхней
+   границе они стояли бы уступом */
+.pageend__nav {
+  align-items: center;
+}
+
+.pageend__home {
+  color: var(--ink-3);
+  text-decoration-color: var(--rule);
+  transition: color 0.2s var(--ease);
+}
+.pageend__home:hover {
+  color: var(--ink);
+}
+
+/* ============================================================
+   ЧАСТЫЕ ВОПРОСЫ
+
+   Свёрнуты и набраны тише всего на странице: человеку, который
+   уже решил написать, они не нужны и только отодвигали бы
+   контакты вниз.
+   ============================================================ */
+
+.faq {
+  max-width: 46rem;
+  margin: clamp(3rem, 7vw, 5rem) auto 0;
+  text-align: left;
+  border-top: 1px solid var(--rule-2);
+}
+
+.faq__item {
+  border-bottom: 1px solid var(--rule-2);
+}
+
+.faq__q {
+  padding: 0.9rem 1.75rem 0.9rem 0;
+  font-size: var(--step-small);
+  color: var(--ink-2);
+  cursor: pointer;
+  list-style: none;
+  position: relative;
+  transition: color 0.2s var(--ease);
+}
+.faq__q::-webkit-details-marker {
+  display: none;
+}
+.faq__q:hover {
+  color: var(--ink);
+}
+
+/* Плюс, который на раскрытом вопросе становится минусом.
+   Рисуется двумя полосками, а не символом из шрифта: символ
+   поехал бы вместе со шрифтом и не смог бы повернуться */
+.faq__q::before,
+.faq__q::after {
+  content: '';
+  position: absolute;
+  right: 0.2rem;
+  top: 50%;
+  width: 9px;
+  height: 1px;
+  background: var(--ink-3);
+  transition: transform 0.3s var(--ease);
+}
+.faq__q::after {
+  transform: rotate(90deg);
+}
+.faq__item[open] .faq__q::after {
+  transform: rotate(0deg);
+}
+
+.faq__a {
+  padding: 0 2rem 1.1rem 0;
+  font-size: var(--step-small);
+  line-height: 1.6;
+  color: var(--ink-2);
+  max-width: 62ch;
+}
+
+.contact__links {
+  justify-content: center;
+}
+
+.contact__mail {
+  font-family: var(--font-display);
+  font-weight: 200;
+  font-size: clamp(1.6rem, 6vw, 5rem);
+  letter-spacing: -0.05em;
+  text-decoration: none;
+  line-height: 1;
+  display: inline-block;
+  word-break: break-word;
+  mix-blend-mode: multiply;
+  transition: color 0.3s var(--ease);
+}
+.contact__mail:hover {
+  color: var(--hot);
+}
+
+.contact__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 2rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 1.1rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 70%);
+  backdrop-filter: blur(6px);
+  font-size: var(--step-small);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    border-color 0.25s var(--ease),
+    transform 0.25s var(--ease);
+}
+.btn:hover {
+  border-color: var(--cool);
+  transform: translateY(-1px);
+}
+
+/* Заливкой набирается ровно одно действие из пары — то, которое
+   человек скорее всего и хочет. Две одинаковые кнопки рядом
+   заставляют читать обе, чтобы понять, какая главная */
+.btn--solid {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper-pure);
+}
+.btn--solid:hover {
+  border-color: var(--ink);
+}
+
+.footer {
+  border-top: 1px solid var(--rule);
+  padding-block: 2rem 2.5rem;
+}
+
+.footer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+/* Ссылка на политику. Подчёркивание сразу, а не по наведению:
+   на телефоне наведения нет, а ссылку от подписи рядом надо
+   отличать без него */
+.note--link {
+  color: var(--ink-2);
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+  text-decoration-color: var(--rule);
+}
+.note--link:hover {
+  color: var(--ink);
+  text-decoration-color: var(--hot);
+}
+
+.footer__note {
+  font-size: var(--step-small);
+  color: var(--ink-3);
+  max-width: 54ch;
+}
+
+/* ============================================================
+   ПОЯВЛЕНИЕ
+   ============================================================ */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.85s var(--ease-out),
+    transform 0.85s var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ============================================================
+   ПУНКТИРНЫЙ ФОН
+
+   Один слой на весь документ, ниже всего содержимого. Он шире
+   экрана и выше рамки: линии входят и выходят за кадр, поэтому
+   их начала и конца не видно.
+
+   preserveAspectRatio у svg отключён — линии должны становиться
+   длиннее и положе на широком экране, а не крупнее. Толщину
+   штриха при этом держит vector-effect, иначе растяжение сделало
+   бы её неровной по длине линии.
+   ============================================================ */
+
+.threads {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  /* Самый нижний слой страницы: под шаром и под содержимым.
+     Отсчёт идёт от body, поэтому линии тянутся на всю высоту
+     документа и прокручиваются вместе с ним */
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  color: var(--doodle);
+}
+
+.threads svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.threads path {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  /* Толщина штриха не тянется вместе с системой координат: без этого
+     одна и та же линия была бы толще там, где растяжение сильнее */
+  vector-effect: non-scaling-stroke;
+  animation: dash-run var(--dash-speed, 11s) linear infinite;
+  animation-direction: var(--dash-dir, normal);
+}
+
+/* Часть линий уводится в тёплый оттенок. Разница почти неразличима
+   по отдельности, но набор перестаёт быть однотонно серым и
+   подхватывает цвет шара */
+.threads__warm {
+  stroke: #dcc4d4;
+}
+/* ============================================================
+   СЛУЖЕБНАЯ СТРАНИЦА
+
+   Сюда приходят не за впечатлением, а за ответом на вопрос.
+   Поэтому одна колонка, крупная строка и много воздуха между
+   разделами: документ, набранный мелко и плотно, читается как
+   документ, который не хотели, чтобы читали.
+   ============================================================ */
+
+.legal {
+  max-width: 44rem;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2.2rem, 4vw, 3.2rem);
+}
+
+.legal__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  margin-bottom: 1rem;
+}
+
+.legal__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  font-size: var(--step-body);
+  line-height: 1.62;
+  color: var(--ink-2);
+}
+
+/* Отбивка вместо маркера: точка перед абзацем в три строки
+   выглядит перечнем покупок, а тут каждый пункт — утверждение */
+.legal__list li {
+  padding-left: 1.1rem;
+  border-left: 1px solid var(--rule);
+}
+
+.legal__list a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+  text-decoration-color: var(--rule);
+}
+.legal__list a:hover {
+  text-decoration-color: var(--hot);
+}
+
+.legal__stamp {
+  font-family: var(--font-mono);
+  font-size: var(--step-label);
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+}
+
+/* ============================================================
+   УСЛУГИ
+
+   Шесть блоков одного устройства, в две колонки на широком экране.
+   Композиционной сбивки здесь нет намеренно: на эту страницу
+   приходят сравнивать, а сравнивать можно только то, что стоит
+   одинаково. Всё остальное на сайте построено на неровности —
+   тут ровность и есть приём.
+   ============================================================ */
+
+.services__more {
+  margin-top: 1.1rem;
+  text-align: center;
+  font-size: var(--step-small);
+}
+.services__more a {
+  color: var(--ink-2);
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+  text-decoration-color: var(--rule);
+  transition: color 0.25s var(--ease);
+}
+@media (hover: hover) {
+  .services__more a:hover {
+    color: var(--ink);
+    text-decoration-color: var(--hot);
+  }
+}
+
+.uslugi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(22rem, 100%), 1fr));
+  gap: clamp(2.5rem, 5vw, 4rem);
+  max-width: 62rem;
+}
+
+.usluga {
+  border-top: 1px solid var(--rule);
+  padding-top: 1.4rem;
+}
+
+.usluga__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
+  font-weight: 350;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.usluga__lede {
+  margin-top: 0.7rem;
+  color: var(--ink-2);
+  line-height: 1.6;
+  max-width: 42ch;
+}
+
+/* Подпись раздела внутри блока. Заголовочного веса ей не нужно:
+   она разделяет части одного блока, а не открывает новый */
+.usluga__label {
+  margin-top: 1.5rem;
+  margin-bottom: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: var(--step-label);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.usluga__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  font-size: var(--step-small);
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.usluga__list li {
+  padding-left: 1rem;
+  border-left: 1px solid var(--rule);
+}
+
+.usluga__cases {
+  list-style: none;
+}
+
+/*
+  Пример — ссылка в портфолио, набранная так же, как строка проекта
+  на главной: имя в цвете работы, под ним подпись, разделитель
+  волосяной линией.
+
+  Здесь была карточка: подложка, скругление и цветная полоса слева.
+  Выглядела она опрятно и была при этом чужой. Плашек на сайте нет
+  нигде — ни у проектов, ни у сильных сторон, ни в разборах, — и
+  первая же из них читается вставкой из другого макета. Цвет работы
+  при этом никуда не делся: он там, где на главной, — в имени.
+*/
+.usluga__case {
+  display: block;
+  text-decoration: none;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--rule);
+  transition: transform 0.25s var(--ease);
+}
+.usluga__cases li:last-child .usluga__case {
+  border-bottom: 0;
+}
+.usluga__case-name {
+  display: block;
+  font-weight: 500;
+  color: var(--i, var(--ink));
+}
+.usluga__case-tag {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: var(--step-small);
+  color: var(--ink-2);
+}
+@media (hover: hover) {
+  .usluga__case:hover {
+    transform: translateX(0.35rem);
+  }
+}
+
+/* Оговорка о том, чего в портфолио нет. Тише всего на странице:
+   это признание, и набирать его вровень с обещаниями нечестно */
+.usluga__gap {
+  margin-top: 1rem;
+  font-size: var(--step-small);
+  line-height: 1.55;
+  color: var(--ink-3);
+  max-width: 42ch;
+}
+
+.uslugi__aside {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+  gap: clamp(2rem, 4vw, 3.25rem);
+  max-width: 62rem;
+  margin-top: clamp(3.5rem, 7vw, 5.5rem);
+  padding-top: clamp(2rem, 4vw, 3rem);
+  border-top: 1px solid var(--rule);
+}
+
+.pricebox__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+}
+
+.pricebox__lede {
+  margin-top: 0.7rem;
+  color: var(--ink-2);
+  line-height: 1.6;
+  max-width: 46ch;
+}
+
+.pricebox__list {
+  margin-top: 1.2rem;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  font-size: var(--step-small);
+  line-height: 1.55;
+  color: var(--ink-2);
+  counter-reset: ask;
+}
+.pricebox__list li {
+  padding-left: 1rem;
+  border-left: 1px solid var(--rule);
+}
+
+/* Вопросы пронумерованы, потому что порядок здесь настоящий:
+   не зная продукта, бессмысленно спрашивать про срок.
+
+   Номер рисуется через ::after, а не ::before, и это не каприз:
+   ::before у пунктов занят подтёсом под шаром на телефоне (см. блок
+   про подтёс в адаптиве). Один псевдоэлемент — одно назначение,
+   иначе правило из медиазапроса молча стирает номера. */
+.pricebox__list--num li {
+  counter-increment: ask;
+  position: relative;
+  padding-left: 2.1rem;
+}
+.pricebox__list--num li::after {
+  content: counter(ask);
+  position: absolute;
+  top: 0;
+  left: 1rem;
+  font-family: var(--font-mono);
+  font-size: var(--step-label);
+  color: var(--hot);
+}
+
+.pricebox__note {
+  margin-top: 1.1rem;
+  font-size: var(--step-small);
+  color: var(--ink-3);
+}
+
+.uslugi__cta {
+  max-width: 62rem;
+  margin-top: clamp(3rem, 6vw, 4.5rem);
+  padding-top: clamp(2rem, 4vw, 3rem);
+  border-top: 1px solid var(--rule);
+}
+.uslugi__cta-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
+  font-weight: 350;
+  letter-spacing: -0.02em;
+}
+.uslugi__cta-lede {
+  margin-top: 0.7rem;
+  color: var(--ink-2);
+  line-height: 1.6;
+  max-width: 44ch;
+}
+.uslugi__cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+/* ============================================================
+   АДАПТИВ
+   ============================================================ */
+
+@media (max-width: 1000px) {
+  .section__head,
+  .about,
+  .detail {
+    grid-template-columns: 1fr;
+  }
+  .facts {
+    border-left: 0;
+    padding-left: 0;
+    border-top: 1px solid var(--rule);
+    padding-top: 1.5rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1.75rem;
+  }
+  /*
+    ВИДНО, ЧТО СТРОКА НАЖИМАЕТСЯ
+
+    На мониторе это показывает наведение: название красится в цвет
+    проекта, стрелка заливается, слева поднимается полоса. На телефоне
+    наведения нет, и до нажатия строка выглядела просто заголовком
+    с подписью — тем же, чем выглядит любой текст выше по странице.
+    Стрелка стояла отдельным кружком под подписью и читалась значком
+    сама по себе, а не концом строки.
+
+    Поэтому на телефоне сразу показывается то, что на мониторе
+    показывает наведение. Приём не новый для сайта, просто у него
+    убрано условие.
+  */
+  .workrow {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+  /* Раскладка задана явно: при автоматической расстановке стрелка
+     уезжала третьей строкой под подпись, и связь с названием терялась */
+  .workrow__name {
+    grid-area: 1 / 1;
+    color: var(--i, var(--ink));
+  }
+  .workrow__tagline {
+    grid-area: 2 / 1 / 3 / -1;
+    margin-top: 0.5rem;
+  }
+  /* Кружок стоит у правого края, то есть за подложкой строки — она
+     туда не тянется, чтобы не гасить шар. Поэтому подложка у него
+     своя, размером ровно с него: у Тапси и Fabrico он иначе приходится
+     на самую плотную краску и пропадает вместе со стрелкой */
+  .workrow__go {
+    grid-area: 1 / 2;
+    border-color: color-mix(in srgb, var(--c) 45%, transparent);
+    color: var(--i, var(--ink-2));
+    background: rgb(246 246 250 / 82%);
+  }
+
+  /*
+    Подложка под строкой проекта.
+
+    На телефоне шар проходит ровно по списку работ, и подпись под
+    названием — серая, мелкая, в одну строку — ложится прямо на
+    самое плотное место краски. Название крупное и тёмное, оно эту
+    заливку переживает; подпись нет.
+
+    Приём тот же, что на первом экране: не плашка, а размывка бумаги.
+    У плашки есть край, и этот край спорит с кругом; у размывки края
+    нет, она гаснет раньше, чем доходит до чего-либо.
+
+    Эллипс шире строки и ниже её: текст должен лежать в середине
+    затухания, а не у обреза, иначе по краям букв проступает шар.
+  */
+  .workrow::after {
+    content: '';
+    position: absolute;
+    /* Правый край подобран по самой длинной подписи: «голосом и
+       словами» у Тапси доходит почти до края экрана. Дальше идёт
+       плотная часть шара, и накрывать её незачем — текста там нет */
+    inset: -0.5rem 12% -0.5rem -8%;
+    z-index: -1;
+    pointer-events: none;
+    /* Затухание начинается рано и идёт долго: под текстом плотно,
+       к шару подходит уже ничем. Резкая граница здесь читалась бы
+       плашкой, а плашка спорит с кругом */
+    background: radial-gradient(
+      68% 54% at 30% 50%,
+      rgb(246 246 250 / 92%) 0%,
+      rgb(246 246 250 / 70%) 44%,
+      rgb(246 246 250 / 0%) 100%
+    );
+  }
+  .workpeek {
+    display: none;
+  }
+}
+
+/* ПЛАНШЕТ. Между тысячей и семьюстами страница ещё держит две
+   колонки, но шар на такой ширине уже проходит через текст, а не
+   рядом с ним. Полосы контента сужаются, чтобы он шёл по полю */
+@media (max-width: 900px) {
+  .side > *,
+  .side--wide > * {
+    max-width: 100%;
+  }
+  .frames__item,
+  .frames__item--lead {
+    flex: 1 1 100%;
+  }
+  /*
+    Ширина рамки телефона задаётся здесь, на самой figure.
+
+    Раньше её задавала рамка внутри, правилом width: min(100%, 15rem).
+    Сто процентов там считались от figure, а у figure ширина была
+    flex-basis: auto — то есть по содержимому, то есть по этой же
+    рамке. Круг замкнулся, проценты вычислить оказалось не от чего,
+    и браузер брал ширину картинки как есть: тысяча сто пикселей
+    на экране в триста девяносто. Страница Тапси из-за этого ехала
+    вбок на три экрана, Фабрико — на полтора.
+
+    Определённая ширина здесь разрывает круг: считать проценты внутри
+    теперь есть от чего.
+  */
+  .frames__item--phone {
+    flex: 0 0 auto;
+    min-width: 0;
+    width: min(20rem, 100%);
+    margin-inline: auto;
+  }
+}
+
+@media (max-width: 620px) {
+  /*
+    Вторичный текст на телефоне темнее.
+
+    Секции на мониторе разведены так, что шар и колонка не
+    пересекаются. На телефоне ширины на такое разведение нет, и
+    подписи — теглайны проектов, подводки секций, подписи под
+    кадрами — неизбежно ложатся на плёнку. Серый по сиреневому
+    не читается вовсе: контраста там меньше двух к одному.
+
+    Правятся не отдельные места, а сами краски. Иначе через месяц
+    появится новая подпись со старым серым, и всё начнётся заново.
+    Ступень между уровнями при этом сохраняется — второй тон остаётся
+    тише основного, просто оба уезжают в сторону чёрного.
+  */
+  :root {
+    --ink-2: #3b3b45;
+    --ink-3: #5d5d6a;
+  }
+
+  /* На узком экране сбивка съедает ширину, а наклон ломает строку
+     переносом — оставляем от композиции только намёк */
+  .hero__line {
+    transform: translateX(calc(var(--offset, 0) * 0.35)) rotate(calc(var(--rot, 0deg) * 0.5));
+  }
+
+  /* Разрядка в минус пять с половиной сотых кегля рассчитана на
+     буквы в семьдесят пикселей. На двадцати пяти она сбивает знаки
+     в сплошную массу — вторая половина ощущения «шрифт другой» */
+  .hero__headline {
+    letter-spacing: -0.03em;
+  }
+
+  /* В подвале шар в финале разрастается почти на всю ширину, и
+     подпись с юридической ссылкой ложатся прямо на него. Здесь
+     оттенком не обойтись: это единственное место на сайте, где
+     текст обязан читаться при любых условиях */
+  .footer__inner .note {
+    color: var(--ink);
+  }
+  .header__city {
+    display: none;
+  }
+  .footer__inner {
+    flex-direction: column;
+  }
+  .about__portrait {
+    max-width: 22rem;
+  }
+
+  /*
+    ПОДТЁС ПОД ТЕКСТОМ НА ТЕЛЕФОНЕ
+
+    Облачко идёт по самим буквам, а не под блоком текста. Это свечение
+    бумаги вокруг каждой буквы: у соседних букв оно сливается в слово,
+    у соседних строк — в абзац. Форма получается по форме текста,
+    поэтому у неё нет ни рамки, ни угла, ни конца в стороне от слов.
+
+    До этого перепробовано два способа, и оба сломались об одно и то же.
+
+    Скруглённая плашка с тенью держала плотность ровно, но у неё был
+    угол, и на стыке двух блоков этот угол было видно.
+
+    Эллипс углов не имеет, но покрывает только вписанную в рамку
+    область: у абзаца в десять строк верхняя и нижняя полосы остаются
+    голыми, и вот эти голые полосы между абзацами и читались стыками.
+    Растянуть эллипс до углов нельзя — чтобы накрыть углы, он должен
+    выйти за края экрана, а там его обрежет, и обрез будет резким.
+
+    Свечение по буквам не имеет ни того ни другого недостатка, потому
+    что у него вообще нет рамки: нечему обрезаться и не с чем
+    стыковаться. Плотность набирается тремя слоями разного размаха —
+    ближний держит букву, дальние заполняют промежутки между строками.
+
+    Строка проекта выше по файлу осталась на эллипсе, и намеренно:
+    там текст в две короткие строки, эллипс ложится по ним точно,
+    и переделывать работающее незачем.
+  */
+  .hero__claim,
+  .hero__detail,
+  .hero__invite,
+  .about__text p,
+  .strengths__title,
+  .strength,
+  .faq__item,
+  .usluga__title,
+  .usluga__lede,
+  .usluga__label,
+  .usluga__list li,
+  .usluga__cases,
+  .usluga__gap,
+  .pricebox__title,
+  .pricebox__lede,
+  .pricebox__list li,
+  .pricebox__note,
+  .uslugi__cta-title,
+  .uslugi__cta-lede {
+    /*
+      Слоёв четыре, и первый идёт дважды. Тени складываются, поэтому
+      два слоя по девяносто два процента дают у самой буквы почти
+      сплошную бумагу — там, где шар плотнее всего, читаемость решает
+      именно она. Один слой такой плотности пришлось бы делать шире,
+      и облако расползлось бы за текст.
+
+      Дальше: четырнадцать точек смыкают слово со словом, двадцать
+      восемь заполняют промежуток между строками, поэтому абзац
+      читается одним облаком, а не строчкой отдельных подсветок.
+
+      Дальше двадцати восьми уходить незачем: за краем абзаца свечение
+      обязано кончиться само, иначе оно снова становится пятном
+      со своими очертаниями.
+    */
+    text-shadow:
+      0 0 5px rgb(246 246 250 / 92%),
+      0 0 5px rgb(246 246 250 / 92%),
+      0 0 14px rgb(246 246 250 / 85%),
+      0 0 28px rgb(246 246 250 / 66%);
+  }
+
+  /* Рамка телефона на телефоне же выглядит нелепо: устройство внутри
+     устройства. Оставляем только экран со скруглением */
+  .frame-phone {
+    width: 100%;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+    margin-inline: auto;
+  }
+  .frame-phone__screen {
+    border-radius: 1.1rem;
+    border: 1px solid var(--rule);
+  }
+  .frame-phone__notch {
+    display: none;
+  }
+
+  /* Полоска с кружками съедает высоту, а на узком экране и так ясно,
+     что перед тобой снимок сайта */
+  .frame-desktop__bar,
+  .clip__bar {
+    display: none;
+  }
+
+  /*
+    КАДР ДЕСКТОПНОГО САЙТА НА ТЕЛЕФОНЕ
+
+    Снимок шириной в 1440 точек, вписанный в 350, показывается в
+    четверть натуральной величины. Заголовки на нём ещё угадываются,
+    а весь остальной текст превращается в серую рябь высотой в четыре
+    точки.
+
+    Растянуть все кадры до читаемой величины нельзя: разбор проекта
+    вырастает в длину вдвое, и человек пролистывает его, не дочитав.
+    Поэтому по умолчанию кадр остаётся обзором — по нему видно
+    композицию и цвет, — а разглядывать его человек просит сам,
+    кнопкой под кадром. В раскрытом виде картинка идёт в две с
+    половиной ширины экрана и листается вбок.
+
+    overscroll-behavior-x: contain — чтобы, домотав кадр до края,
+    палец не утаскивал за собой всю страницу.
+  */
+  .shot__zoom {
+    display: inline-flex;
+  }
+  .frame-desktop.is-zoom {
+    overflow: auto hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--rule) transparent;
+  }
+  .frame-desktop.is-zoom img {
+    width: 250%;
+    max-width: none;
+  }
+}
+
+/* ============================================================
+   ДОСТУПНОСТЬ ДВИЖЕНИЯ
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal,
+  .hero__lede,
+  .ask {
+    opacity: 1;
+    transform: none;
+  }
+  .hero__line > span {
+    transform: none;
+  }
+}
+
+/*
+   Значок качества сайта.
+
+   Картинка приезжает с чужого сервера в чужой палитре: белая плашка
+   и красная буква на светло-серой бумаге подвала. В своём виде она
+   кричит громче всего, что рядом, — а это подвал, самое тихое место
+   на сайте.
+
+   Поэтому он обесцвечен и приглушён до уровня соседних подписей,
+   а цвет и полную плотность возвращает по наведению. Значок никуда
+   не делся и читается, просто перестал быть первым, что видит глаз.
+*/
+.iks {
+  display: inline-flex;
+  border-radius: 6px;
+  overflow: hidden;
+  line-height: 0;
+  opacity: 0.5;
+  filter: grayscale(1);
+  transition:
+    opacity 0.25s var(--ease),
+    filter 0.25s var(--ease);
+}
+.iks img {
+  width: 74px;
+  height: auto;
+}
+.iks:hover,
+.iks:focus-visible {
+  opacity: 1;
+  filter: none;
+}

@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+
+    /* Конфиг Vite тянет промпты из src/ai/knowledge.ts, чтобы dev-мост
+       и боевая функция работали по одному тексту. Оттуда по цепочке
+       типов виден i18n/lang.tsx, и без этого флага проверка спотыкается
+       о расширение файла, хотя ни одного тега в этой ветке нет */
+    "jsx": "react-jsx",
+
+    /* Плагин работает в Node: ему нужны Buffer, process и типы http */
+    "types": ["node"],
+
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": ["vite.config.ts"]
+}
