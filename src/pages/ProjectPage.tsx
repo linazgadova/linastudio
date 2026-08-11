@@ -1,5 +1,6 @@
 ﻿import { useRef } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { Btn } from '../components/Btn'
 import { useLang } from '../i18n/lang'
 import { PROFILE } from '../data/profile'
 import { PROJECTS } from '../data/projects'
@@ -177,14 +178,7 @@ export function ProjectPage() {
               )}
 
               {project.extraLink && (
-                <a
-                  className="btn"
-                  href={project.extraLink.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {t(project.extraLink.label)}
-                </a>
+                <Btn label={t(project.extraLink.label)} href={project.extraLink.url} />
               )}
             </div>
 
@@ -326,9 +320,7 @@ export function ProjectPage() {
                 {t(UI.writeTelegram)}
               </a>
             )}
-            <a className="btn" href={`mailto:${PROFILE.email}`}>
-              {PROFILE.email}
-            </a>
+            <Btn label={PROFILE.email} href={`mailto:${PROFILE.email}`} />
           </div>
 
           {/*
@@ -345,9 +337,7 @@ export function ProjectPage() {
             на главную и так попадаешь одним движением.
           */}
           <nav className="pageend__nav" aria-label={t(UI.backToWork)}>
-            <Link className="btn" to={`${path('/')}#work`}>
-              {t(UI.backToWork)}
-            </Link>
+            <Btn label={t(UI.backToWork)} to={`${path('/')}#work`} />
             <Link className="pageend__home" to={path('/')}>
               {t(UI.backHome)}
             </Link>

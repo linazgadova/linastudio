@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { Btn } from '../components/Btn'
 import { useLang } from '../i18n/lang'
 import { HIRE } from '../data/hire'
 import { PROJECTS } from '../data/projects'
@@ -248,25 +249,12 @@ export function Hire() {
                 {t(UI.writeTelegram)}
               </a>
             )}
-            <a className="btn" href={`mailto:${PROFILE.email}`}>
-              {PROFILE.email}
-            </a>
-            {PROFILE.github && (
-              <a
-                className="btn"
-                href={`https://github.com/${PROFILE.github}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                GitHub
-              </a>
-            )}
+            <Btn label={PROFILE.email} href={`mailto:${PROFILE.email}`} />
+            {PROFILE.github && <Btn label="GitHub" href={`https://github.com/${PROFILE.github}`} />}
           </div>
 
           <nav className="pageend__nav" aria-label={t(UI.backHome)}>
-            <Link className="btn" to={`${path('/')}#work`}>
-              {t(UI.backToWork)}
-            </Link>
+            <Btn label={t(UI.backToWork)} to={`${path('/')}#work`} />
             <Link className="pageend__home" to={path('/')}>
               {t(UI.backHome)}
             </Link>

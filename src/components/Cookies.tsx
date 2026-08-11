@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Btn } from './Btn'
 import { useLang } from '../i18n/lang'
 import { UI } from '../data/ui'
 import { CONSENT_KEY, METRIKA_ID } from '../data/analytics'
@@ -125,12 +126,10 @@ export function Cookies() {
         </p>
 
         <div className="consent__row">
-          <button ref={first} type="button" className="btn btn--solid" onClick={() => answer(true)}>
-            {t(UI.cookiesYes)}
-          </button>
-          <button type="button" className="btn" onClick={() => answer(false)}>
-            {t(UI.cookiesNo)}
-          </button>
+          {/* Фокус при открытии окна уходит на первую кнопку, поэтому
+              ссылка на узел прокидывается насквозь через компонент */}
+          <Btn solid label={t(UI.cookiesYes)} onClick={() => answer(true)} innerRef={first} />
+          <Btn label={t(UI.cookiesNo)} onClick={() => answer(false)} />
         </div>
       </div>
     </div>

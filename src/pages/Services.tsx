@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { Btn } from '../components/Btn'
 import { useLang } from '../i18n/lang'
 import { SERVICES, SERVICES_PAGE } from '../data/services'
 import { PROJECTS } from '../data/projects'
@@ -136,18 +137,9 @@ export function Services() {
           <p className="uslugi__cta-lede">{t(SERVICES_PAGE.ctaLede)}</p>
           <p className="uslugi__cta-row">
             {PROFILE.telegram && (
-              <a
-                className="btn btn--solid"
-                href={`https://t.me/${PROFILE.telegram}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                @{PROFILE.telegram}
-              </a>
+              <Btn solid label={`@${PROFILE.telegram}`} href={`https://t.me/${PROFILE.telegram}`} />
             )}
-            <a className="btn" href={`mailto:${PROFILE.email}`}>
-              {PROFILE.email}
-            </a>
+            <Btn label={PROFILE.email} href={`mailto:${PROFILE.email}`} />
           </p>
         </Reveal>
       </section>

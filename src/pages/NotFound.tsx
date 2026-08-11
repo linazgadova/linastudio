@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { Btn } from '../components/Btn'
 import { useLang } from '../i18n/lang'
 import { UI } from '../data/ui'
 import { PROJECTS } from '../data/projects'
@@ -59,12 +60,8 @@ export function NotFound() {
           <h1 className="lost__title">{t(UI.lostTitle)}</h1>
           <p className="lost__lede">{t(UI.lostLede)}</p>
           <div className="lost__row">
-            <Link className="btn btn--solid" to={path('/')}>
-              {t(UI.backHome)}
-            </Link>
-            <a className="btn" href={`https://t.me/${PROFILE.telegram}`}>
-              {t(UI.writeTelegram)}
-            </a>
+            <Btn solid label={t(UI.backHome)} to={path('/')} />
+            <Btn label={t(UI.writeTelegram)} href={`https://t.me/${PROFILE.telegram}`} />
           </div>
         </Reveal>
       </section>

@@ -5,6 +5,7 @@ import { PROJECTS } from '../data/projects'
 import { UI } from '../data/ui'
 import { PREVIEWS } from '../assets/previews'
 import { useAuroraSection } from '../aurora/target'
+import { Words } from './Words'
 import { Reveal } from './Reveal'
 
 /**
@@ -62,9 +63,9 @@ export function WorkList() {
     >
 
       <Reveal className="section__head">
-        <h2 className="section__title" id="work-title">
+        <Words as="h2" className="section__title" id="work-title">
           {t(UI.workTitle)}
-        </h2>
+        </Words>
         <p className="section__lede">{t(UI.workLede)}</p>
       </Reveal>
 

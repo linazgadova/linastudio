@@ -1,5 +1,6 @@
 ﻿import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Btn } from './Btn'
 import { useLang } from '../i18n/lang'
 import { CONTACT, PROFILE } from '../data/profile'
 import { FAQ, SERVICES, SITE_URL } from '../data/seo'
@@ -7,6 +8,7 @@ import { SHOW_IKS, iksImage, iksLink } from '../data/analytics'
 import { CONSENT_EVENT, hasConsent } from '../analytics/metrika'
 import { UI } from '../data/ui'
 import { useAuroraSection } from '../aurora/target'
+import { Words } from './Words'
 import { Reveal } from './Reveal'
 
 export function Contact() {
@@ -47,9 +49,9 @@ export function Contact() {
 
       <div className="shell contact__inner">
         <Reveal>
-          <h2 className="section__title" id="contact-title">
+          <Words as="h2" className="section__title" id="contact-title">
             {t(CONTACT.title)}
-          </h2>
+          </Words>
           <p className="section__lede contact__lede">{t(CONTACT.lede)}</p>
         </Reveal>
 
@@ -102,72 +104,66 @@ export function Contact() {
           </a>
 
           <div className="contact__links">
-            {/* Значок меняется вместе с подписью: галочка — то, что
-                видно раньше слова, а слово подтверждает, что именно
-                скопировалось */}
-            <button type="button" className="btn" onClick={copyEmail} data-done={copied ? '' : undefined}>
-              <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">
-                {copied ? (
-                  <path
-                    d="M3.5 8.5 6.5 11.5 12.5 5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                ) : (
-                  <path
-                    d="M5.5 5.5V3.2h7.3v7.3h-2.3M3.2 5.5h7.3v7.3H3.2z"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.3"
-                    strokeLinejoin="round"
-                  />
-                )}
-              </svg>
-              {copied ? t(UI.copied) : t(UI.copyEmail)}
-            </button>
-
-            {PROFILE.github && (
-              <a
-                className="btn"
-                href={`https://github.com/${PROFILE.github}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                GitHub
-                <svg viewBox="0 0 14 14" width="11" height="11" aria-hidden="true">
-                  <path
-                    d="M4 10 10 4M10 4H5.2M10 4v4.8"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
+            {/* Значок меняется вместе с подписью: галочка видна раньше
+                слова, а слово подтверждает, что именно скопировалось */}
+            <Btn
+              label={copied ? t(UI.copied) : t(UI.copyEmail)}
+              done={copied}
+              cursor="copy"
+              onClick={copyEmail}
+              icon={
+                <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">
+                  {copied ? (
+                    <path
+                      d="M3.5 8.5 6.5 11.5 12.5 5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  ) : (
+                    <path
+                      d="M5.5 5.5V3.2h7.3v7.3h-2.3M3.2 5.5h7.3v7.3H3.2z"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.3"
+                      strokeLinejoin="round"
+                    />
+                  )}
                 </svg>
-              </a>
-            )}
+              }
+            />
+
+            {PROFILE.github && <Btn label="GitHub" href={`https://github.com/${PROFILE.github}`} />}
           </div>
         </Reveal>
 
         {/*
-          Частые вопросы. Свёрнуты сознательно: человеку, который
-          уже решил написать, они не нужны и только отодвигали бы
-          контакты вниз. Тому, кто ещё выбирает, они под рукой.
-          Поисковики и языковые модели читают содержимое details
-          независимо от того, раскрыт он или нет.
+          Частые вопросы — под одной строкой, а не пятью.
+
+          Пять свёрнутых заголовков занимали высоту в экран и стояли
+          последним, что человек видит: страница заканчивалась
+          справочником, а не адресом. Теперь это одна строка, и
+          развернуть её решает тот, кто ещё выбирает.
+
+          Ответы при этом остаются в разметке всегда: поисковики и
+          языковые модели читают содержимое details независимо от
+          того, раскрыт он или нет, а половина этих вопросов —
+          готовый ответ на поисковый запрос.
         */}
         <Reveal delay={120}>
-          <div className="faq">
-            {FAQ.map((item) => (
-              <details className="faq__item" key={item.q.ru}>
-                <summary className="faq__q">{t(item.q)}</summary>
-                <p className="faq__a">{t(item.a)}</p>
-              </details>
-            ))}
-          </div>
+          <details className="faq">
+            <summary className="faq__all">{t(UI.faqTitle)}</summary>
+            <div className="faq__list">
+              {FAQ.map((item) => (
+                <details className="faq__item" key={item.q.ru}>
+                  <summary className="faq__q">{t(item.q)}</summary>
+                  <p className="faq__a">{t(item.a)}</p>
+                </details>
+              ))}
+            </div>
+          </details>
         </Reveal>
       </div>
     </section>
@@ -209,8 +205,31 @@ function useConsent(): boolean {
  */
 export function Footer() {
   const { lang, t, path } = useLang()
+  const ref = useRef<HTMLElement>(null)
   const surname = t(PROFILE.surname)
   const consented = useConsent()
+
+  /*
+    Шар у подвала уходит под его нижний край.
+
+    Без своей точки подвал доставался последнему блоку страницы, а тот
+    на главной как раз выкатывает шар вниз по центру: верхушка шара
+    торчала над кромкой стекла и резала её пополам. Здесь шар опущен
+    ниже обреза целиком, и сквозь размытие видно только свечение.
+
+    Точка ставится на самом подвале, поэтому работает на всех
+    страницах разом, а не только на главной.
+  */
+  useAuroraSection(ref, {
+    cx: 0.5,
+    cy: -0.22,
+    radius: 0.4,
+    form: 0.4,
+    intensity: 0.9,
+    shift: 0.9,
+    accent: '#FF2D6F',
+    tint: 0.5,
+  })
 
   const pages = [
     { to: `${path('/')}#work`, label: t(UI.navWork) },
@@ -219,32 +238,29 @@ export function Footer() {
   ]
 
   return (
-    <footer className="footer">
+    <footer className="footer" ref={ref}>
       <div className="shell footer__top">
         <div className="footer__act">
           {PROFILE.telegram && (
-            <a
-              className="fbtn fbtn--solid"
+            <Btn
+              solid
+              label={t(UI.writeTelegram)}
               href={`https://t.me/${PROFILE.telegram}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {t(UI.writeTelegram)}
-              <svg viewBox="0 0 14 14" width="12" height="12" aria-hidden="true">
-                <path
-                  d="M2.5 7h9M8 3.5 11.5 7 8 10.5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </a>
+              icon={
+                <svg viewBox="0 0 14 14" width="12" height="12" aria-hidden="true">
+                  <path
+                    d="M2.5 7h9M8 3.5 11.5 7 8 10.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              }
+            />
           )}
-          <a className="fbtn" href={`mailto:${PROFILE.email}`}>
-            {PROFILE.email}
-          </a>
+          <Btn label={PROFILE.email} href={`mailto:${PROFILE.email}`} />
         </div>
 
         <nav className="footer__nav" aria-label={t(UI.footerNav)}>
@@ -265,38 +281,6 @@ export function Footer() {
           )}
         </nav>
       </div>
-
-      {/*
-        Подпись во всю ширину, подрезанная снизу.
-
-        Здесь имя студии, а не имя человека: адрес сайта — linastudio,
-        и подпись под ним должна совпадать с тем, что человек набрал
-        в строке браузера. Фамилия стоит ниже, в копирайте.
-
-        Единственное место на сайте, где буквы выходят за поля и за
-        край экрана. Кегль считается в долях ширины окна, поэтому
-        строка садится по краям одинаково и на телефоне, и на
-        мониторе, а нижнюю четверть срезает край подвала.
-
-        Буквы разложены по отдельности ради наведения: каждая
-        отзывается сама, и рука ведёт по слову, как по клавишам.
-        Уменьшение делается transform — раскладка от него не
-        меняется, и соседние буквы стоят на месте.
-
-        aria-hidden: адрес сайта озвучке ни к чему, а по буквам она
-        прочитала бы его как «эль-и-эн-а».
-      */}
-      <p className="footer__sign" aria-hidden="true">
-        {[...'LINA STUDIO'].map((ch, i) =>
-          ch === ' ' ? (
-            <span className="footer__sign-gap" key={i} />
-          ) : (
-            <span className="footer__sign-ch" key={i}>
-              {ch}
-            </span>
-          ),
-        )}
-      </p>
 
       <div className="shell footer__meta">
         <p className="footer__mnote">
@@ -334,6 +318,39 @@ export function Footer() {
             />
           </a>
         )}
+      </div>
+      {/*
+        Подпись во всю ширину, у самого низа страницы.
+
+        Здесь имя студии, а не имя человека: адрес сайта — linastudio,
+        и подпись под ним совпадает с тем, что человек набрал в строке
+        браузера. Фамилия стоит выше, в копирайте.
+
+        Единственное место на сайте, где буквы выходят за поля и за
+        край экрана. Кегль считается в долях ширины окна, поэтому
+        строка садится по краям одинаково и на телефоне, и на
+        мониторе.
+
+        Буква вложена в собственную обёртку, и уменьшается именно она,
+        а обёртка стоит на месте. Иначе выходит дрожь: сжавшаяся буква
+        уходит из-под курсора, наведение слетает, буква возвращается —
+        и так по кругу.
+
+        aria-hidden: адрес сайта озвучке ни к чему, по буквам она
+        прочитала бы его как «эль-и-эн-а».
+      */}
+      <div className="footer__signwrap">
+        <p className="footer__sign" aria-hidden="true">
+          {[...'LINA STUDIO'].map((ch, i) =>
+            ch === ' ' ? (
+              <span className="footer__sign-gap" key={i} />
+            ) : (
+              <span className="footer__sign-ch" key={i}>
+                <span>{ch}</span>
+              </span>
+            ),
+          )}
+        </p>
       </div>
     </footer>
   )

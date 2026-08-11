@@ -190,13 +190,14 @@ ol {
 }
 
 /* ============================================================
-   КУРСОР
+   КУРСОР И КАРАНДАШНЫЙ СЛЕД
 
-   Точка вместо стрелки, выворачивающая то, что под ней.
-   Разбор решения — в components/Cursor.tsx.
+   Точка вместо стрелки, за ней короткие штрихи того же цвета и
+   ритма, что пунктир через весь сайт. Разбор — в Cursor.tsx.
    ============================================================ */
 
-.cursor {
+.cursor,
+.trail {
   display: none;
 }
 
@@ -219,47 +220,134 @@ ol {
     cursor: text;
   }
 
+  .trail {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 399;
+    pointer-events: none;
+  }
+
+  /*
+    Штрих следа.
+
+    Ложится по направлению движения и гаснет за полторы секунды.
+    Гаснет он переходом, а не анимацией: анимацию пришлось бы
+    перезапускать сменой имени, а переход перезапускается снятием
+    одного класса — и делает это браузер, без участия скрипта.
+  */
+  .trail__dash {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 16px;
+    height: 1.5px;
+    border-radius: 1px;
+    background: var(--doodle-strong);
+    opacity: 0;
+    will-change: transform, opacity;
+  }
+
+  .trail__dash.is-fading {
+    opacity: 0.85;
+    transition:
+      opacity 1.5s cubic-bezier(0.3, 0, 0.7, 0.2),
+      scale 1.5s var(--ease);
+    opacity: 0;
+    scale: 0.4 1;
+  }
+
   .cursor {
     display: block;
     position: fixed;
-    /* До первого движения мыши точки нет: иначе она стоит в левом
-       верхнем углу, куда её поставил нулевой transform */
-    opacity: 0;
     top: 0;
     left: 0;
     z-index: 401;
-    width: 13px;
-    height: 13px;
-    border-radius: 50%;
-    background: var(--paper);
-    /* Выворот вместо цвета: сайт светлый, подвал чернильный, шар
-       переливается — одной краски, видной везде, тут нет */
-    mix-blend-mode: difference;
+    /* До первого движения мыши точки нет: иначе она стоит в левом
+       верхнем углу, куда её поставил нулевой transform */
+    opacity: 0;
     pointer-events: none;
     will-change: transform;
-    transition:
-      width 0.28s var(--ease),
-      height 0.28s var(--ease),
-      opacity 0.2s var(--ease);
+    transition: opacity 0.2s var(--ease);
   }
 
   .cursor[data-live='on'] {
     opacity: 1;
   }
 
-  .cursor[data-on='grab'] {
-    width: 34px;
-    height: 34px;
+  /*
+    Ядро чернильное, вокруг него кольцо цвета бумаги.
+
+    Одной краски, видной везде, на этом сайте нет: под точкой бывает
+    и светлая бумага, и малиновый шар, и чёрная кнопка. Пара
+    «чернила плюс бумага» читается на любом из них — что-то одно
+    из двух всегда контрастно фону.
+  */
+  .cursor__dot {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--ink);
+    box-shadow: 0 0 0 1.5px rgb(244 244 248 / 85%);
+    transition:
+      transform 0.32s var(--ease),
+      background 0.32s var(--ease);
   }
 
-  .cursor[data-press='on'] {
-    width: 9px;
-    height: 9px;
+  /* На ссылке точка вырастает и краснеет: это единственное место,
+     где акцентный цвет сайта оказывается прямо под рукой */
+  .cursor[data-on='grab'] .cursor__dot {
+    transform: scale(2.6);
+    background: var(--hot);
+  }
+
+  .cursor[data-press='on'] .cursor__dot {
+    transform: scale(0.7);
+  }
+
+  /*
+    Подпись. Появляется справа от точки и не двигает её: точка
+    остаётся ровно там, где мышь, а подпись выезжает рядом.
+  */
+  .cursor__word {
+    position: absolute;
+    top: -0.7em;
+    left: 26px;
+    padding: 0.3rem 0.6rem;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-mono);
+    font-size: var(--step-label);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateX(-6px);
+    transition:
+      opacity 0.24s var(--ease),
+      transform 0.24s var(--ease);
+  }
+
+  .cursor[data-label='on'] .cursor__word {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* Подпись рядом с выросшей точкой сидела бы на ней: точка на
+     ссылке втрое больше обычной */
+  .cursor[data-label='on'] .cursor__dot {
+    transform: scale(1.5);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cursor {
+  .cursor,
+  .cursor__dot,
+  .cursor__word {
     transition: none;
   }
 }
@@ -1927,7 +2015,48 @@ main,
   max-width: 46rem;
   margin: clamp(3rem, 7vw, 5rem) auto 0;
   text-align: left;
+}
+
+/* Строка, под которой сложены все пять вопросов. Значок — плюс,
+   тот же, что у самих вопросов внутри, и поворачивается он в
+   крест: раскрытый список закрывается тем же движением */
+.faq__all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-block: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: var(--step-label);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  cursor: pointer;
+  list-style: none;
+  transition: color 0.25s var(--ease);
+}
+.faq__all::-webkit-details-marker {
+  display: none;
+}
+.faq__all::after {
+  content: '';
+  width: 9px;
+  height: 9px;
+  background:
+    linear-gradient(currentColor, currentColor) center / 100% 1px no-repeat,
+    linear-gradient(currentColor, currentColor) center / 1px 100% no-repeat;
+  transition: transform 0.3s var(--ease);
+}
+.faq__all:hover {
+  color: var(--ink);
+}
+.faq[open] > .faq__all::after {
+  transform: rotate(45deg);
+}
+
+.faq__list {
   border-top: 1px solid var(--rule-2);
+  margin-top: 0.4rem;
 }
 
 .faq__item {
@@ -2009,14 +2138,14 @@ main,
 /*
   КНОПКА
 
-  Наведение заливает её снизу вверх, а не подсвечивает рамку. Заливка
-  — псевдоэлемент, который едет по transform: движется композитный
-  слой, страница под ним не пересчитывается. Прежний вариант поднимал
-  всю кнопку на пиксель, и на строке из трёх кнопок подряд это
-  читалось дрожью, а не откликом.
+  Наведение делает две вещи разом. Снизу приходит заливка, а подпись
+  уезжает вверх, и на её место снизу же встаёт вторая, точно такая же.
+  Читается это как поворот планки: всё содержимое движется в одну
+  сторону одним движением, а не подсвечивается на месте.
 
-  Направление снизу вверх выбрано под чтение: палец идёт к кнопке
-  снизу, заливка идёт ему навстречу.
+  Едет только transform, то есть композитный слой. Прежний вариант
+  поднимал всю кнопку на пиксель, и на строке из трёх кнопок подряд
+  это читалось дрожью, а не откликом.
 */
 .btn {
   position: relative;
@@ -2024,18 +2153,18 @@ main,
   overflow: hidden;
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.6rem 1.1rem;
+  padding: 0.62rem 1.15rem;
   border: 1px solid var(--rule);
   border-radius: 999px;
   background: rgb(255 255 255 / 70%);
   backdrop-filter: blur(6px);
   font-size: var(--step-small);
+  line-height: 1.35;
   text-decoration: none;
   cursor: pointer;
   transition:
-    color 0.3s var(--ease),
-    border-color 0.3s var(--ease);
+    color 0.34s var(--ease),
+    border-color 0.34s var(--ease);
 }
 
 .btn::before {
@@ -2045,7 +2174,31 @@ main,
   z-index: -1;
   background: var(--ink);
   transform: translateY(101%);
-  transition: transform 0.42s var(--ease);
+  transition: transform 0.44s var(--ease);
+}
+
+/* Окошко высотой ровно в строку: вторая подпись стоит под ним
+   и до наведения не видна */
+.btn__swap {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  height: 1.35em;
+}
+
+.btn__row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 1.35em;
+  white-space: nowrap;
+  transition: transform 0.44s var(--ease);
+}
+
+.btn__row--next {
+  position: absolute;
+  inset: 0;
+  transform: translateY(100%);
 }
 
 .btn:hover,
@@ -2059,13 +2212,14 @@ main,
   transform: translateY(0);
 }
 
-/* Значок внутри кнопки едет вместе с заливкой: он часть жеста,
-   а не отдельная анимация */
-.btn svg {
-  transition: transform 0.42s var(--ease);
+.btn:hover .btn__row,
+.btn:focus-visible .btn__row {
+  transform: translateY(-100%);
 }
-.btn:hover svg {
-  transform: translateX(2px);
+
+.btn:hover .btn__row--next,
+.btn:focus-visible .btn__row--next {
+  transform: translateY(0);
 }
 
 /* Заливкой набирается ровно одно действие из пары — то, которое
@@ -2092,8 +2246,8 @@ main,
 
   Это единственная кнопка на сайте, после которой не происходит
   ничего видимого: адрес ушёл в буфер, страница осталась прежней.
-  Поэтому здесь отклик держится сам, без наведения: мятная заливка
-  стоит на месте, пока не сменится подпись.
+  Поэтому отклик держится сам, без наведения: мятная заливка стоит
+  на месте, пока не сменится подпись.
 */
 .btn[data-done] {
   color: var(--paper-pure);
@@ -2102,6 +2256,18 @@ main,
 .btn[data-done]::before {
   background: var(--mint);
   transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn::before,
+  .btn__row {
+    transition-duration: 0.01ms;
+  }
+}
+
+.footer {
+  position: relative;
+  z-index: 2;
 }
 
 /* ============================================================
@@ -2117,12 +2283,56 @@ main,
    там, где она должна закончиться сама.
    ============================================================ */
 
+/*
+  Подвал отделён от страницы размытием, а не линией.
+
+  Шар к этому месту выкатывается вниз и уходит под подвал; сквозь
+  полупрозрачную бумагу он виден размытым, и получается стекло, за
+  которым осталась страница.
+
+  Ни линии сверху, ни резкой границы: и заливка, и размытие
+  проявляются на первых полутора сотнях пикселей через маску. Ровный
+  край здесь был, и он делил экран пополам — вместо стекла выходила
+  наклеенная сверху панель.
+
+  Единственное место на сайте с backdrop-filter, и это осознанно.
+  Холст под ним перерисовывается каждый кадр, а значит каждый кадр
+  пересчитывается и размытие. На первом экране от него по этой самой
+  причине отказались (см. hero__meta), но там оно шло бы во всю
+  высоту и всё время; здесь — полоса внизу, до которой ещё надо
+  долистать, и радиус вчетверо меньше.
+*/
 .footer {
   position: relative;
   z-index: 1;
-  border-top: 1px solid var(--rule);
   padding-top: clamp(2.5rem, 6vw, 5rem);
   overflow: hidden;
+}
+
+.footer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: rgb(244 244 248 / 66%);
+  backdrop-filter: blur(6px) saturate(1.08);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 15%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 15%);
+}
+
+/* Без поддержки размытия подвал становится обычной бумагой, но с тем
+   же плавным началом: сквозь полупрозрачный фон без размытия шар шёл
+   бы резким пятном прямо под строками */
+@supports not (backdrop-filter: blur(4px)) {
+  .footer::before {
+    background: linear-gradient(
+      to bottom,
+      rgb(244 244 248 / 0%) 0%,
+      var(--paper) 15%,
+      var(--paper) 100%
+    );
+  }
 }
 
 .footer__top {
@@ -2136,75 +2346,6 @@ main,
   display: flex;
   flex-wrap: wrap;
   gap: 0.65rem;
-}
-
-/*
-  Кнопка подвала.
-
-  Заливка приходит снизу: палец идёт к кнопке снизу, и отклик идёт
-  ему навстречу. Едет псевдоэлемент по transform — движется
-  композитный слой, страница под ним не пересчитывается.
-*/
-.fbtn {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.4rem;
-  border: 1px solid var(--rule);
-  border-radius: 999px;
-  color: var(--ink);
-  font-size: var(--step-small);
-  text-decoration: none;
-  transition:
-    color 0.3s var(--ease),
-    border-color 0.3s var(--ease);
-}
-
-.fbtn::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  z-index: -1;
-  background: var(--ink);
-  transform: translateY(101%);
-  transition: transform 0.42s var(--ease);
-}
-
-.fbtn:hover,
-.fbtn:focus-visible {
-  color: var(--paper-pure);
-  border-color: var(--ink);
-}
-
-.fbtn:hover::before,
-.fbtn:focus-visible::before {
-  transform: translateY(0);
-}
-
-.fbtn svg {
-  transition: transform 0.42s var(--ease);
-}
-.fbtn:hover svg {
-  transform: translateX(3px);
-}
-
-.fbtn--solid {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--paper-pure);
-}
-
-/* У тёмной кнопки заливка обратная — малиновая: чёрным по чёрному
-   наведение не показать */
-.fbtn--solid::before {
-  background: var(--hot);
-}
-.fbtn--solid:hover,
-.fbtn--solid:focus-visible {
-  border-color: var(--hot);
 }
 
 .footer__nav {
@@ -2262,16 +2403,24 @@ main,
   Нижнюю четверть срезает край подвала. Целое слово внизу читалось бы
   заголовком нового раздела, подрезанное — подписью.
 */
+/* Подрез: рамка ровно по той высоте, которую надо оставить видимой.
+   Срезается немного — настолько, чтобы строка читалась подписью, а не
+   заголовком нового раздела, и не настолько, чтобы буквы потеряли
+   свои основания */
+.footer__signwrap {
+  overflow: hidden;
+  margin-top: clamp(1.25rem, 3vw, 2.5rem);
+}
+
 .footer__sign {
   display: flex;
   justify-content: center;
-  margin-top: clamp(1.75rem, 4vw, 3.5rem);
-  margin-bottom: -0.13em;
+  margin-bottom: -0.06em;
   font-family: var(--font-display);
-  font-size: 17.9vw;
-  font-weight: 200;
-  line-height: 0.78;
-  letter-spacing: -0.045em;
+  font-size: 17.5vw;
+  font-weight: 430;
+  line-height: 0.8;
+  letter-spacing: -0.075em;
   text-transform: uppercase;
   white-space: nowrap;
   user-select: none;
@@ -2285,17 +2434,38 @@ main,
   Точка отсчёта у нижнего края буквы: она садится на базовую линию,
   а не уплывает от неё к середине.
 */
+/*
+  Наведение ловит обёртка, а уменьшается вложенная буква.
+
+  Сжимать сам предмет, по которому идёт наведение, нельзя: он уходит
+  из-под курсора, наведение слетает, предмет возвращается на место и
+  снова попадает под курсор. Выглядит это дрожью, и чем сильнее
+  уменьшение, тем она заметнее.
+*/
 .footer__sign-ch {
   display: inline-block;
-  transform-origin: 50% 100%;
-  transition:
-    transform 0.35s var(--ease),
-    color 0.35s var(--ease);
 }
 
-.footer__sign-ch:hover {
+.footer__sign-ch > span {
+  display: inline-block;
+  transform-origin: 50% 100%;
+  /*
+    Уход и возврат идут одной кривой и одним временем: буква, которая
+    садится медленно, а вскакивает рывком, читается сломанной.
+
+    Кривая ровная, без разгона у концов. Здесь стояла та, что резко
+    стартует и долго доезжает, — от неё почти всё движение
+    происходило в первые полтораста миллисекунд, и буква именно
+    прыгала, сколько бы ни длился переход.
+  */
+  transition:
+    transform 0.95s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.95s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.footer__sign-ch:hover > span {
   color: var(--hot);
-  transform: scale(0.82);
+  transform: scale(0.5);
 }
 
 /* Пробел между словами: в разложенной по буквам строке настоящего
@@ -2305,23 +2475,26 @@ main,
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .footer__sign-ch {
-    transition: color 0.35s var(--ease);
-  }
-  .footer__sign-ch:hover {
+  .footer__sign-ch:hover > span {
     transform: none;
   }
 }
 
+/*
+  Строка мелочи.
+
+  Ни заливки, ни линии сверху: с ними она читалась отдельным
+  прямоугольником, наехавшим на подпись. Подпись подрезает
+  собственная рамка ниже, а эта строка просто стоит под ней
+  на той же бумаге.
+*/
 .footer__meta {
-  position: relative;
   display: flex;
+  border-top: 1px solid var(--rule-2);
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem 2.5rem;
-  padding-block: 1.5rem;
-  border-top: 1px solid var(--rule);
-  background: var(--paper);
+  padding-block: 1.4rem 1.6rem;
 }
 
 .footer__mnote {
@@ -2346,6 +2519,44 @@ main,
   }
   .footer .iks {
     margin-left: 0;
+  }
+}
+
+/* ============================================================
+   ЗАГОЛОВОК ПО СЛОВАМ
+
+   Слово выезжает снизу из-под собственной строки, следующее чуть
+   позже. Разбор — в components/Words.tsx.
+   ============================================================ */
+
+/* Окошко высотой ровно в строку: пока слово ниже, его не видно.
+   Нижний запас — под выносные буквы, иначе «у» и «р» срезаются
+   собственным окошком */
+.words__box {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+
+.words__w {
+  display: inline-block;
+  transform: translateY(105%);
+  transition: transform 0.85s var(--ease-out);
+  transition-delay: calc(var(--i) * 60ms);
+}
+
+.words.is-in .words__w {
+  transform: translateY(0);
+}
+
+/* Просьба убрать движение оставляет заголовок на месте: без этого
+   правила слова так и остались бы под своими окошками */
+@media (prefers-reduced-motion: reduce) {
+  .words__w {
+    transform: none;
+    transition: none;
   }
 }
 
