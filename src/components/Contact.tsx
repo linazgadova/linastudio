@@ -12,7 +12,7 @@ import { Words } from './Words'
 import { Reveal } from './Reveal'
 
 export function Contact() {
-  const { t, path } = useLang()
+  const { t } = useLang()
   const ref = useRef<HTMLElement>(null)
   const [copied, setCopied] = useState(false)
 
@@ -70,13 +70,6 @@ export function Contact() {
               </li>
             ))}
           </ul>
-          {/* Строчка ведёт на страницу, где у каждой из этих шести
-              есть состав работы и пример. Без неё список остаётся
-              перечислением слов, а страница услуг — сиротой, на
-              которую внутри сайта не ссылается никто */}
-          <p className="services__more">
-            <Link to={path('/uslugi')}>{t(UI.servicesMore)}</Link>
-          </p>
         </Reveal>
 
         {/* Телеграм первым: туда она отвечает быстрее, и человеку
@@ -240,19 +233,17 @@ export function Footer() {
   /*
     Спуск буквы.
 
-    Класс снимается, браузеру дают его применить, и он ставится
-    обратно: без этого повторное наведение на ту же букву, пока
-    движение ещё идёт, не перезапускает его — анимация с тем же
-    именем для браузера уже играет.
+    Начатое движение доигрывается до конца: повторное наведение,
+    пока буква ещё идёт, не сбрасывает его на начало. Рука, дважды
+    прошедшая по одному месту, иначе роняла бы букву обратно
+    в исходный размер посреди спуска.
 
     Снимает класс сам браузер по концу движения, поэтому следить
     за таймерами не приходится.
   */
   function hit(e: React.PointerEvent<HTMLElement>) {
     const ch = e.currentTarget.firstElementChild as HTMLElement | null
-    if (!ch) return
-    ch.classList.remove('is-hit')
-    void ch.offsetWidth
+    if (!ch || ch.classList.contains('is-hit')) return
     ch.classList.add('is-hit')
   }
 
@@ -280,6 +271,10 @@ export function Footer() {
             />
           )}
           <Btn label={PROFILE.email} href={`mailto:${PROFILE.email}`} />
+          {/* Гитхаб стоит рядом с почтой, а не в списке страниц: это
+              такой же адрес, по которому с ней связываются, и в отклике
+              на вакансию его спрашивают вместе с ними */}
+          {PROFILE.github && <Btn label="GitHub" href={`https://github.com/${PROFILE.github}`} />}
         </div>
 
         <nav className="footer__nav" aria-label={t(UI.footerNav)}>
@@ -288,16 +283,6 @@ export function Footer() {
               {p.label}
             </Link>
           ))}
-          {PROFILE.github && (
-            <a
-              className="footer__link"
-              href={`https://github.com/${PROFILE.github}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              GitHub
-            </a>
-          )}
         </nav>
       </div>
 

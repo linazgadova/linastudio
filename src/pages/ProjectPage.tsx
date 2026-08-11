@@ -2,7 +2,6 @@
 import { Link, useParams } from 'react-router-dom'
 import { Btn } from '../components/Btn'
 import { useLang } from '../i18n/lang'
-import { PROFILE } from '../data/profile'
 import { PROJECTS } from '../data/projects'
 import { LAYERS } from '../data/layers'
 import { UI } from '../data/ui'
@@ -301,28 +300,12 @@ export function ProjectPage() {
       )}
 
       {/*
-        Конец разбора — то место, где человек уже понял, что она умеет,
-        и решает, писать или нет. Заставлять его возвращаться на главную
-        за адресом незачем, поэтому связь стоит прямо здесь.
+        Конец разбора. Здесь только дорога дальше: адреса стоят
+        в подвале сразу под этим блоком, и повторять их значило бы
+        дать человеку две одинаковые кнопки подряд.
       */}
       <section className="shell pageend" ref={endRef}>
         <Reveal>
-          <p className="pageend__lede">{t(UI.projectAsk)}</p>
-
-          <div className="pageend__links">
-            {PROFILE.telegram && (
-              <a
-                className="cta"
-                href={`https://t.me/${PROFILE.telegram}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {t(UI.writeTelegram)}
-              </a>
-            )}
-            <Btn label={PROFILE.email} href={`mailto:${PROFILE.email}`} />
-          </div>
-
           {/*
             «Все проекты» — кнопкой, а не строчкой.
 

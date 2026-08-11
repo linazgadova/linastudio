@@ -229,30 +229,13 @@ export function Hire() {
       </section>
 
       {/*
-        Конец страницы — то место, где нанимающий решает, писать или
-        нет. Дорога назад стоит здесь же: до этой строки он пролистал
-        таблицу на семь проектов, и возвращаться к шапке за ссылкой
-        на главную ему пришлось бы через всю неё.
+        Конец страницы. Адреса стоят в подвале сразу под этим блоком,
+        поэтому здесь только дорога назад: до этой строки нанимающий
+        пролистал таблицу на семь проектов, и возвращаться к шапке за
+        ссылкой на главную ему пришлось бы через всю неё.
       */}
       <section className="shell pageend" ref={endRef}>
-        <Reveal className="hire__veil">
-          <h2 className="hire__title">{t(HIRE.ctaTitle)}</h2>
-
-          <div className="pageend__links hire__cta-links">
-            {PROFILE.telegram && (
-              <a
-                className="cta"
-                href={`https://t.me/${PROFILE.telegram}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {t(UI.writeTelegram)}
-              </a>
-            )}
-            <Btn label={PROFILE.email} href={`mailto:${PROFILE.email}`} />
-            {PROFILE.github && <Btn label="GitHub" href={`https://github.com/${PROFILE.github}`} />}
-          </div>
-
+        <Reveal>
           <nav className="pageend__nav" aria-label={t(UI.backHome)}>
             <Btn label={t(UI.backToWork)} to={`${path('/')}#work`} />
             <Link className="pageend__home" to={path('/')}>
