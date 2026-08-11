@@ -92,6 +92,9 @@ const {
   faq,
   services,
   servicesPage,
+  hire,
+  layers,
+  limits,
   ui,
   privacy,
   operator,
@@ -577,6 +580,11 @@ ${projects
   )
   .join('\n')}
   </ul>
+  <!-- Дорога на /rabota, на том же месте, что и в живой странице:
+       сразу под работами. Нарисована она реактом, и без этой строки
+       робот и языковые модели нашли бы страницу для работодателя
+       только через карту сайта -->
+  <p><a href="${loc('/rabota', lang)}">${esc(T(ui.hireName, lang))} — ${esc(T(ui.hirePage, lang))}</a></p>
 
   <h2>${esc(T(about.title, lang))}</h2>
 ${about.paragraphs.map((x) => `  <p>${esc(T(x, lang))}</p>`).join('\n')}
@@ -954,6 +962,135 @@ for (const lang of LANGS) {
   )
 }
 
+/*
+ * СТРАНИЦА ДЛЯ РАБОТОДАТЕЛЯ
+ *
+ * Матрица «кто что вёл» отдаётся роботу настоящей таблицей: у неё
+ * есть заголовки строк и столбцов, и языковая модель читает её как
+ * данные, а не как набор слов. Из точек в вёрстке смысла не извлечь,
+ * поэтому здесь на их месте стоят «да» и прочерк.
+ */
+function hireBody(lang) {
+  const head = layers.map((l) => `<th scope="col">${esc(T(l.title, lang))}</th>`).join('')
+
+  const rows = projects
+    .map((p) => {
+      const cells = layers
+        .map((l) => `<td>${p.layers.includes(l.id) ? esc(T(hire.layerYes, lang)) : '—'}</td>`)
+        .join('')
+      const name = p.url
+        ? `<a href="${loc(`/work/${p.id}`, lang)}">${esc(T(p.name, lang))}</a>`
+        : esc(T(p.name, lang))
+      return `    <tr>
+      <th scope="row">${name}</th>
+      <td>${esc(T(p.role, lang))}</td>${cells}
+      <td>${esc(p.stack.join(' · '))}</td>
+    </tr>`
+    })
+    .join('\n')
+
+  return `<main id="main">
+  <p><a href="${loc('/', lang)}">${esc(T(ui.backHome, lang))}</a></p>
+
+  <h1>${esc(T(hire.title, lang))}</h1>
+  <p>${esc(T(hire.lede, lang))}</p>
+  <p><strong>${esc(T(hire.akaTitle, lang))}:</strong> ${esc(T(hire.aka, lang))}</p>
+
+  <h2>${esc(T(hire.layersTitle, lang))}</h2>
+  <p>${esc(T(hire.layersLede, lang))}</p>
+  <table>
+    <thead>
+      <tr><th scope="col">${esc(T(hire.colProject, lang))}</th><th scope="col">${esc(
+        T(hire.colRole, lang),
+      )}</th>${head}<th scope="col">${esc(T(hire.colStack, lang))}</th></tr>
+    </thead>
+    <tbody>
+${rows}
+    </tbody>
+  </table>
+
+  <h2>${esc(T(hire.howTitle, lang))}</h2>
+  <p>${esc(T(limits, lang))}</p>
+
+  <h2>${esc(T(hire.codeTitle, lang))}</h2>
+  <p>${esc(T(hire.codeLede, lang))}</p>
+  <ul>
+${hire.code
+  .map(
+    (c) =>
+      `    <li><a href="https://github.com/${esc(profile.github)}/linastudio/blob/main/${esc(
+        c.path,
+      )}">${esc(c.path)}</a> — ${esc(T(c.what, lang))}</li>`,
+  )
+  .join('\n')}
+  </ul>
+
+  <h2>${esc(T(hire.formatTitle, lang))}</h2>
+  <ul>
+${hire.format.map((f) => `    <li>${esc(T(f, lang))}</li>`).join('\n')}
+  </ul>
+
+  <h2>${esc(T(hire.ctaTitle, lang))}</h2>
+  <p>${esc(T(hire.ctaLede, lang))}</p>
+  <p>
+    <a href="https://t.me/${esc(profile.telegram)}">Telegram: @${esc(profile.telegram)}</a><br />
+    <a href="mailto:${esc(profile.email)}">${esc(T(LABEL.mail, lang))}: ${esc(profile.email)}</a><br />
+${profile.github ? `    <a href="https://github.com/${esc(profile.github)}">GitHub: ${esc(profile.github)}</a><br />\n` : ''}    ${esc(T(profile.location, lang))}
+  </p>
+</main>`
+}
+
+for (const lang of LANGS) {
+  const bare = '/rabota'
+  const url = SITE + loc(bare, lang)
+
+  write(
+    fileFor(bare, lang),
+    withBody(
+      head(html, {
+        lang,
+        title: T(hire.seoTitle, lang),
+        desc: T(hire.seoDescription, lang),
+        bare,
+        cover: OG_FALLBACK,
+        coverAlt: T(hire.title, lang),
+        graph: [
+          personNode(lang),
+          siteNode(lang),
+          {
+            '@type': 'BreadcrumbList',
+            '@id': `${url}#crumbs`,
+            itemListElement: [
+              {
+                '@type': 'ListItem',
+                position: 1,
+                name: `${T(profile.name, lang)} ${T(profile.surname, lang)}`,
+                item: `${SITE}${loc('/', lang)}`,
+              },
+              { '@type': 'ListItem', position: 2, name: T(hire.title, lang), item: url },
+            ],
+          },
+          {
+            /* ProfilePage, а не обычная WebPage: страница описывает
+               человека, и поисковику это говорит, кого именно */
+            '@type': 'ProfilePage',
+            '@id': `${url}#page`,
+            url,
+            name: T(hire.seoTitle, lang),
+            description: T(hire.seoDescription, lang),
+            isPartOf: { '@id': `${SITE}/#website` },
+            mainEntity: { '@id': `${SITE}/#person` },
+            about: { '@id': `${SITE}/#person` },
+            inLanguage: lang,
+            dateModified: stamp(lastmod(loc(bare, lang), JSON.stringify([lang, hire, limits]))),
+          },
+        ],
+      }),
+      hireBody(lang),
+    ),
+  )
+}
+
 for (const lang of LANGS) {
   const bare = '/privacy'
   const url = SITE + loc(bare, lang)
@@ -1233,6 +1370,17 @@ const pages = [
     title: null,
     src: { services, servicesPage },
   },
+  /* Страница для работодателя. Приоритет ниже услуг: её адрес идёт
+     прямой ссылкой в сопроводительное письмо, а из поиска на неё
+     приходят редко — по имени, и тогда первой встречает главная */
+  {
+    bare: '/rabota',
+    priority: '0.6',
+    freq: 'monthly',
+    img: null,
+    title: null,
+    src: { hire, limits, layers },
+  },
   /* Политика идёт последней и с низким приоритетом: она обязана быть
      в индексе и находиться поиском по названию, но обход стоит
      тратить в первую очередь на работы */
@@ -1448,6 +1596,10 @@ ${L(
 - [Telegram](https://t.me/${profile.telegram}): ${L('быстрее всего ответит здесь', 'the fastest way to reach her')}
 - [${T(LABEL.mail, lang)}](mailto:${profile.email}): ${profile.email}
 ${profile.github ? `- [GitHub](https://github.com/${profile.github}): ${L('исходник этого сайта целиком, с комментариями к решениям', 'the full source of this site, with a comment on every decision')}` : ''}
+- [${L('Для работодателя', 'For employers')}](${SITE}${loc('/rabota', lang)}): ${L(
+    'что она вела сама в каждом проекте, стек, формат работы',
+    'what she ran herself on each project, the stack, the working format',
+  )}
 
 ## ${L('Что делает', 'What she does')}
 ${services
@@ -1508,7 +1660,7 @@ const made = existsSync(join(dist, 'work'))
   ? readdirSync(join(dist, 'work')).filter((f) => f.endsWith('.html')).length
   : 0
 console.log(
-  `[seo] страниц: ${entries.length} (${made} проектов + главная + политика, × 2 языка),\n` +
+  `[seo] страниц: ${entries.length} (${made} проектов + главная, услуги, работа и политика, × 2 языка),\n` +
     `      404 с настоящим кодом, sitemap на ${entries.length} адресов,\n` +
     `      llms.txt на двух языках, всё для ${SITE}`,
 )

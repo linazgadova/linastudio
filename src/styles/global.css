@@ -361,9 +361,6 @@ main,
 
 .header__inner {
   position: relative;
-}
-
-.header__inner {
   display: flex;
   align-items: baseline;
   gap: 1rem;
@@ -373,6 +370,16 @@ main,
 .header a,
 .header button {
   pointer-events: auto;
+}
+
+/* Имя и город — одна ссылка на главную, поэтому по базовой линии
+   их выравнивает она сама, а не шапка: у шапки в строке теперь
+   два предмета, ссылка и переключатель языка */
+.header__home {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  text-decoration: none;
 }
 
 .header__name {
@@ -1635,6 +1642,7 @@ main,
   .strengths__list {
     grid-template-columns: minmax(0, 1fr);
   }
+
 }
 
 .contact {
@@ -1763,6 +1771,23 @@ main,
 }
 .nextwork:hover .nextwork__name {
   color: var(--c, var(--hot));
+}
+
+/* Под списком проектов та же плашка набирается тише. В размере h2
+   она спорит с названиями работ над ней: список из семи проектов
+   должен оставаться главным на экране, а это дорога вбок от него */
+.nextwork--hire {
+  margin-top: clamp(2.5rem, 5vw, 4rem);
+  border-bottom: 0;
+}
+
+.nextwork--hire .nextwork__name {
+  font-size: var(--step-h3);
+  font-weight: 350;
+}
+
+.nextwork--hire:hover .nextwork__name {
+  color: var(--hot);
 }
 
 .nextwork__tagline {
@@ -2127,6 +2152,7 @@ main,
   }
 }
 
+
 .uslugi {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(22rem, 100%), 1fr));
@@ -2327,6 +2353,427 @@ main,
 }
 
 /* ============================================================
+   СТРАНИЦА ДЛЯ РАБОТОДАТЕЛЯ
+   ============================================================
+
+   Читают её по диагонали, поэтому основа страницы — матрица:
+   семь проектов на шесть слоёв. Заполненная клетка отвечает на
+   вопрос «что она делала сама» быстрее любого абзаца.
+
+   Отбивки здесь свои и вдвое короче общих (--section-gap доходит
+   до 11rem). Общая отбивка рассчитана на главную, где каждый
+   раздел выезжает на пустой экран; здесь же четыре коротких блока
+   подряд, и на такой высоте между ними страница разваливалась
+   на четыре отдельные страницы.
+
+   На узком экране таблица разбирается на блоки: девять колонок
+   в телефон не помещаются никаким кеглем, а горизонтальная
+   прокрутка внутри страницы прячет половину данных от того,
+   кто её не заметит.
+   ============================================================ */
+
+.hire__band {
+  padding-block: clamp(2.75rem, 5.5vw, 4.5rem);
+  position: relative;
+}
+
+/*
+  ПОДЛОЖКА ПОД ТЕКСТОМ, ПО КОТОРОМУ ПРОХОДИТ ШАР
+
+  Приём тот же, что на первом экране и под строками проектов: не
+  плашка, а размывка бумаги. У плашки есть край, и этот край спорит
+  с кругом; у размывки края нет, она гаснет раньше, чем доходит до
+  чего-либо.
+
+  Здесь она нужнее, чем на главной. Мелкий текст этой страницы —
+  стек моноширинным в четверть кегля, подписи проектов, пути к
+  файлам — тонет в краске там, где крупный заголовок её переживает.
+
+  Эллипс ровно по размеру своей рамки: 50% на 50% от центра — это
+  значит, что прозрачность доходит до нуля на всех четырёх краях
+  сразу. Стоит взять хоть немного больше, и там, где рамка кончается,
+  гаснуть уже нечему: остаётся прямая линия поперёк шара.
+
+  Поэтому текст отодвигается от края не растяжением эллипса, а
+  запасом самой рамки: она выходит за блок сверху и снизу, и строки
+  ложатся в плотную середину затухания. Вбок запас взят долей
+  от поля страницы — на широком экране блок и так почти во всю
+  ширину, и любой запас в процентах его собственной ширины вылезал
+  бы за экран горизонтальной прокруткой.
+
+  Высококонтрастному режиму размывка не нужна: шар там выключен,
+  а полупрозрачная заливка поверх бумаги только пачкает её.
+*/
+.hire__veil {
+  position: relative;
+}
+
+.hire__veil::before {
+  content: '';
+  position: absolute;
+  inset: -28% calc(var(--gutter) * -0.6);
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgb(246 246 250 / 88%) 0%,
+    rgb(246 246 250 / 74%) 52%,
+    rgb(246 246 250 / 0%) 100%
+  );
+}
+
+@media (prefers-contrast: more) {
+  .hire__veil::before {
+    display: none;
+  }
+}
+
+/* Волосяная линия вместо пустоты: блоки стоят близко, и без неё
+   заголовок следующего читается продолжением предыдущего */
+.hire__band--rule {
+  border-top: 1px solid var(--rule-2);
+}
+
+.hire__aka {
+  margin-top: clamp(1.75rem, 4vw, 2.75rem);
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--rule);
+  max-width: 78ch;
+  color: var(--ink-2);
+  font-size: var(--step-small);
+  line-height: 1.65;
+}
+
+.hire__aka-label {
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--step-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hire__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 2.4vw, 1.75rem);
+  font-weight: 350;
+  letter-spacing: -0.02em;
+}
+
+.hire__lede {
+  margin-top: 0.7rem;
+  max-width: 52ch;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+
+.hire__tablewrap {
+  margin-top: 1.8rem;
+}
+
+.hire__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--step-small);
+  text-align: left;
+}
+
+.hire__table th,
+.hire__table td {
+  padding: 0.75rem 0.6rem;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+  font-weight: 400;
+}
+
+.hire__table thead th {
+  border-bottom: 1px solid var(--ink);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--step-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Три проекта из семи сделаны от макета до домена. В шести колонках
+   одинаковых точек это теряется, а для нанимающего именно эти строки
+   и есть ответ на вопрос, что она умеет одна */
+.hire__table tbody tr[data-all] {
+  background: rgb(255 45 111 / 4%);
+}
+
+/* Колонка слоя узкая: в ней стоит одна точка, и подпись не должна
+   растягивать её шире содержимого */
+.hire__lcol {
+  width: 1%;
+  text-align: center;
+}
+
+.hire__lshort,
+.hire__lname {
+  display: none;
+}
+
+.hire__proj a {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--c, var(--ink-3));
+  padding-bottom: 1px;
+}
+
+.hire__proj a:hover {
+  color: var(--c, var(--hot));
+}
+
+.hire__tag {
+  display: block;
+  margin-top: 0.25rem;
+  max-width: 24ch;
+  color: var(--ink-3);
+  font-size: var(--step-label);
+  line-height: 1.45;
+}
+
+.hire__role {
+  max-width: 16ch;
+  color: var(--ink-2);
+}
+
+.hire__cell {
+  text-align: center;
+}
+
+.hire__dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--ink-3);
+  border-radius: 50%;
+}
+
+.hire__cell[data-on] .hire__dot {
+  background: var(--hot);
+  border-color: var(--hot);
+}
+
+/* Стек стоит в правой колонке — ровно там, где по странице проходит
+   шар, и набран он мельче всего, что на ней есть. Подложка блока
+   гаснет к своим краям, то есть как раз здесь её и нет: этой колонке
+   нужна своя, размером с ячейку */
+.hire__stack {
+  position: relative;
+  max-width: 22ch;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: var(--step-label);
+  line-height: 1.5;
+}
+
+.hire__stack::before {
+  content: '';
+  position: absolute;
+  /* Запас вбок в rem, а не в долях ячейки: на телефоне ячейка стека
+     разворачивается во всю ширину строки, и доля от неё вылезла бы
+     за экран горизонтальной прокруткой */
+  inset: -30% -0.75rem;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgb(246 246 250 / 88%) 0%,
+    rgb(246 246 250 / 72%) 52%,
+    rgb(246 246 250 / 0%) 100%
+  );
+}
+
+@media (prefers-contrast: more) {
+  .hire__stack::before {
+    display: none;
+  }
+}
+
+/* Метод и формат в две колонки. Оба блока короткие, и вертикалью
+   они дали бы два экрана, на три четверти пустых */
+.hire__duo {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: clamp(2rem, 5vw, 4.5rem);
+}
+
+.hire__col--aside {
+  border-left: 1px solid var(--rule);
+  padding-left: clamp(1.5rem, 3vw, 2.75rem);
+}
+
+.hire__how {
+  margin-top: 0.9rem;
+  max-width: 56ch;
+  line-height: 1.7;
+}
+
+/* Три места в коде — тремя колонками. Столбиком они растягивали
+   страницу ещё на экран, а читаются они всё равно параллельно */
+.hire__code {
+  margin-top: 1.8rem;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.hire__spot {
+  border-top: 1px solid var(--ink);
+  padding-top: 1rem;
+}
+
+.hire__path {
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--step-small);
+  text-decoration: none;
+  border-bottom: 1px solid var(--hot);
+  padding-bottom: 1px;
+}
+
+.hire__path:hover {
+  color: var(--hot);
+}
+
+.hire__what {
+  margin-top: 0.7rem;
+  color: var(--ink-2);
+  font-size: var(--step-small);
+  line-height: 1.6;
+}
+
+.hire__format {
+  margin-top: 0.9rem;
+  list-style: none;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.hire__format li {
+  position: relative;
+  padding-left: 1.1rem;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+
+.hire__format li::before {
+  content: '';
+  position: absolute;
+  top: 0.62em;
+  left: 0;
+  width: 5px;
+  height: 5px;
+  background: var(--hot);
+  border-radius: 50%;
+}
+
+.hire__cta-lede {
+  margin-top: 0.7rem;
+}
+
+/* Средний экран: три колонки кода в 1000 пикселей уже не влезают
+   так, чтобы путь к файлу помещался в строку */
+@media (max-width: 1100px) {
+  .hire__code {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Узкий экран: матрица разбирается на блоки. Девять колонок в телефон
+   не помещаются, а прокрутка вбок спрятала бы стек и половину слоёв от
+   того, кто её не заметит. Точки заменяются подписанными фишками —
+   без подписи на узком экране непонятно, какой именно слой погашен.
+
+   Блок стоит здесь, сразу за своими правилами, а не в общем разделе
+   адаптива ниже: тот идёт до этих строк по файлу, и его правила
+   проиграли бы им по порядку следования. */
+@media (max-width: 900px) {
+  .hire__duo {
+    grid-template-columns: 1fr;
+  }
+  .hire__col--aside {
+    border-left: 0;
+    border-top: 1px solid var(--rule);
+    padding-left: 0;
+    padding-top: 1.75rem;
+  }
+  .hire__code {
+    grid-template-columns: 1fr;
+  }
+  .hire__table,
+  .hire__table tbody {
+    display: block;
+  }
+  .hire__table thead {
+    display: none;
+  }
+  .hire__table tr {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem 0.35rem;
+    padding: 1.3rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .hire__table th,
+  .hire__table td {
+    display: block;
+    padding: 0;
+    border: 0;
+  }
+  .hire__proj,
+  .hire__role,
+  .hire__stack {
+    flex: 0 0 100%;
+    max-width: none;
+  }
+  .hire__proj a {
+    font-size: var(--step-body);
+  }
+  .hire__tag {
+    max-width: none;
+  }
+  .hire__role::before,
+  .hire__stack::before {
+    content: attr(data-label) ': ';
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--step-label);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .hire__cell {
+    flex: 0 0 auto;
+  }
+  .hire__dot {
+    display: none;
+  }
+  .hire__lname {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    color: var(--ink-3);
+    font-family: var(--font-mono);
+    font-size: var(--step-label);
+    line-height: 1.3;
+  }
+  .hire__cell[data-on] .hire__lname {
+    background: var(--hot);
+    border-color: var(--hot);
+    color: var(--paper-pure);
+  }
+  /* Подсветка полной строки на телефоне не нужна: там строка и так
+     стоит отдельным блоком с шестью зажжёнными фишками подряд */
+  .hire__table tbody tr[data-all] {
+    background: none;
+  }
+}
+
+/* ============================================================
    АДАПТИВ
    ============================================================ */
 
@@ -2439,9 +2886,9 @@ main,
     Ширина рамки телефона задаётся здесь, на самой figure.
 
     Раньше её задавала рамка внутри, правилом width: min(100%, 15rem).
-    Сто процентов там считались от figure, а у figure ширина была
-    flex-basis: auto — то есть по содержимому, то есть по этой же
-    рамке. Круг замкнулся, проценты вычислить оказалось не от чего,
+    Сто процентов там считались от figure, а ширина самой figure шла
+    от flex-basis: auto, то есть от содержимого — от этой же рамки.
+    Вычислять проценты оказалось не от чего,
     и браузер брал ширину картинки как есть: тысяча сто пикселей
     на экране в триста девяносто. Страница Тапси из-за этого ехала
     вбок на три экрана, Фабрико — на полтора.

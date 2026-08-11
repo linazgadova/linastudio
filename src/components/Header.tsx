@@ -13,16 +13,23 @@ import { UI } from '../data/ui'
  * тёмного полотна, и поверх светлых скриншотов проектов.
  */
 export function Header() {
-  const { lang, t } = useLang()
+  const { lang, t, path } = useLang()
   const { pathname } = useLocation()
 
   return (
     <header className="header">
       <div className="shell header__inner">
-        <a className="header__name" href="#top">
-          {t(PROFILE.name)}
-        </a>
-        <span className="header__city">{t(PROFILE.location)}</span>
+        {/*
+          Имя и город — одна ссылка на главную. Раньше здесь стоял
+          якорь #top: на главной он прокручивал к первому экрану, а на
+          странице проекта вёл в никуда, потому что элемента с таким
+          именем там нет. Адрес с якорем работает в обоих случаях —
+          с главной прокручивает, с любой другой страницы возвращает.
+        */}
+        <Link className="header__home" to={`${path('/')}#top`} aria-label={t(UI.backHome)}>
+          <span className="header__name">{t(PROFILE.name)}</span>
+          <span className="header__city">{t(PROFILE.location)}</span>
+        </Link>
 
         <div className="header__right">
           {/*

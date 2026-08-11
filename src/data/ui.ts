@@ -115,6 +115,21 @@ export const UI = {
     en: 'What each one includes and what the price depends on →',
   } as L,
 
+  /* Дорога на страницу для работодателя. Стоит сразу под списком
+     проектов: место, где человек уже посмотрел работы и решает, что
+     делать дальше. В блоке контактов эта ссылка была строчкой в самом
+     низу длинной страницы, и до неё не доходили.
+
+     Формулировка ровная, без «ищу работу»: её видит и заказчик,
+     пришедший за сайтом, и для него это сведения о том, кто будет
+     делать работу, а не объявление. */
+  hireLabel: { ru: 'Для работодателя', en: 'For employers' } as L,
+  hireName: { ru: 'Работа в штате', en: 'A full-time role' } as L,
+  hirePage: {
+    ru: 'Что я веду сама в каждом проекте, стек, формат работы и открытый код этого сайта',
+    en: 'What I run myself on each project, the stack, the working format and this site’s open source',
+  } as L,
+
   emailLabel: { ru: 'Почта', en: 'Email' } as L,
   contactWrite: { ru: 'Написать на почту', en: 'Send an email' } as L,
   copied: { ru: 'Скопировано', en: 'Copied' } as L,

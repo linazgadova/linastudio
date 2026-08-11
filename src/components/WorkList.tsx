@@ -101,6 +101,18 @@ export function WorkList() {
         ))}
       </div>
 
+      {/* Страница для работодателя — сразу под работами. Человек тут
+          уже посмотрел, что сделано, и следующий его вопрос — что из
+          этого делала она сама. Строкой в блоке контактов эта ссылка
+          стояла в конце страницы, и до неё не долистывали */}
+      <Reveal>
+        <Link className="nextwork nextwork--hire" to={path('/rabota')}>
+          <span className="nextwork__label">{t(UI.hireLabel)}</span>
+          <span className="nextwork__name">{t(UI.hireName)}</span>
+          <span className="nextwork__tagline">{t(UI.hirePage)}</span>
+        </Link>
+      </Reveal>
+
       <div ref={peekRef} className={`workpeek${peeked ? ' is-on' : ''}`} aria-hidden="true">
         {peeked && <img src={PREVIEWS[peeked.id]?.[0]} alt="" />}
       </div>

@@ -117,8 +117,8 @@ export const FAQ: { q: L; a: L }[] = [
   {
     q: { ru: 'Сколько времени занимает работа?', en: 'How long does it take?' } as L,
     a: {
-      ru: 'Лендинг — около недели. Многостраничный сайт с дизайном с нуля — две-три недели. Продукт с базой данных и личным кабинетом — от месяца.',
-      en: 'A landing page takes about a week. A multi-page site designed from scratch, two to three weeks. A product with a database and user accounts, a month and up.',
+      ru: 'Срок считается не по числу страниц, а по тому, что за ними: есть ли готовые тексты и фотографии, один язык или два, витрина или личный кабинет с базой, нужен ли дизайн с нуля. Эти четыре ответа и решают, неделя это или несколько месяцев.',
+      en: 'The timeline comes from what sits behind the pages rather than from their number: whether the text and photos already exist, one language or two, a shop window or an account with a database, design from scratch or not. Those four answers decide whether it is a week or a few months.',
     } as L,
   },
   {

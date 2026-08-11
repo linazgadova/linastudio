@@ -12,9 +12,11 @@ import {
   topicNotes,
 } from './src/ai/knowledge'
 import { PROJECTS } from './src/data/projects'
-import { ABOUT, CONTACT, HERO, HERO_LINES, PROFILE, STRENGTHS } from './src/data/profile'
+import { ABOUT, CONTACT, HERO, HERO_LINES, LIMITS, PROFILE, STRENGTHS } from './src/data/profile'
 import { FAQ, INDEXNOW_KEY, SEO, SERVICES, SITE_URL } from './src/data/seo'
 import { SERVICES_PAGE } from './src/data/services'
+import { HIRE } from './src/data/hire'
+import { LAYERS } from './src/data/layers'
 import { UI } from './src/data/ui'
 import { OPERATOR, PRIVACY } from './src/data/legal'
 
@@ -114,6 +116,13 @@ function seoData(): Plugin {
           faq: FAQ,
           services: SERVICES,
           servicesPage: SERVICES_PAGE,
+          /* Страница для работодателя и словарь слоёв: из них
+             собирается матрица «кто что вёл» в файле для роботов */
+          hire: HIRE,
+          layers: LAYERS,
+          /* «Как я работаю»: до появления /rabota этот текст жил
+             только в знаниях модели и на страницах не показывался */
+          limits: LIMITS,
           /* Подписи разделов. Раньше постобработка писала их по-русски
              прямо в коде — на английской версии это давало страницу
              с русскими заголовками разделов */
@@ -132,6 +141,9 @@ function seoData(): Plugin {
             year: p.year,
             role: p.role,
             stack: p.stack,
+            /* Слои нужны матрице на /rabota: из них собирается таблица
+               «кто что вёл», и без них строка проекта пустая */
+            layers: p.layers,
             inside: p.inside,
             /* Исходный путь обложки. По нему постобработка находит
                в manifest настоящее имя файла с хешем */

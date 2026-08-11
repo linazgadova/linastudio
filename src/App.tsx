@@ -7,6 +7,7 @@ import { SEO, SITE_URL } from './data/seo'
 import { PRIVACY } from './data/legal'
 import { PROJECTS } from './data/projects'
 import { SERVICES_PAGE } from './data/services'
+import { HIRE } from './data/hire'
 import { UI } from './data/ui'
 import { Header } from './components/Header'
 import { Hero } from './components/Hero'
@@ -19,6 +20,7 @@ import { ProjectPage } from './pages/ProjectPage'
 import { NotFound } from './pages/NotFound'
 import { Privacy } from './pages/Privacy'
 import { Services } from './pages/Services'
+import { Hire } from './pages/Hire'
 import { Cookies } from './components/Cookies'
 import { AuroraFlat, useOrbSupport } from './aurora/flat'
 
@@ -86,6 +88,7 @@ function DocumentMeta() {
 
     const legal = bare === '/privacy'
     const uslugi = bare === '/uslugi'
+    const rabota = bare === '/rabota'
 
     /*
       Правило повторяет scripts/seo.mjs намеренно: там заголовок идёт
@@ -103,7 +106,9 @@ function DocumentMeta() {
         ? signed(t(PRIVACY.title))
         : uslugi
           ? signed(t(SERVICES_PAGE.seoTitle))
-          : t(SEO.home.title)
+          : rabota
+            ? signed(t(HIRE.seoTitle))
+            : t(SEO.home.title)
 
     const description = project
       ? `${t(project.name)}: ${t(project.tagline)}. ${t(UI.projectMeta)}`
@@ -111,7 +116,9 @@ function DocumentMeta() {
         ? t(PRIVACY.lede).slice(0, 300)
         : uslugi
           ? t(SERVICES_PAGE.seoDescription)
-          : t(SEO.home.description)
+          : rabota
+            ? t(HIRE.seoDescription)
+            : t(SEO.home.description)
     const url = `${SITE_URL}${pathname === '/' ? '/' : pathname}`
 
     document.title = title
@@ -263,8 +270,19 @@ function useSmoothScroll() {
   }, [])
 }
 
-/** Возврат со страницы проекта на список должен попадать в список. */
-function ScrollToAnchor() {
+/**
+ * Куда смотреть после перехода.
+ *
+ * Адрес с якорем открывается на своём куске — так возврат со страницы
+ * проекта попадает в список работ, а не в шапку. Любой другой переход
+ * начинается сверху.
+ *
+ * Верх нужен явно, потому что переход внутри сайта страницу не
+ * перезагружает: браузер оставляет прокрутку там, где она была.
+ * Ссылка снизу главной открывала страницу услуг или работы сразу
+ * на её последнем экране, и человек видел подвал вместо заголовка.
+ */
+function ScrollOnRoute() {
   const { pathname, hash } = useLocation()
 
   useEffect(() => {
@@ -275,7 +293,7 @@ function ScrollToAnchor() {
         return
       }
     }
-    if (stripLang(pathname) === '/') window.scrollTo(0, 0)
+    window.scrollTo(0, 0)
   }, [pathname, hash])
 
   return null
@@ -300,7 +318,7 @@ function Shell() {
   return (
     <>
       <DocumentMeta />
-      <ScrollToAnchor />
+      <ScrollOnRoute />
 
       <a className="skip-link" href="#main">
         {t(UI.skipToContent)}
@@ -334,6 +352,7 @@ function Shell() {
             выпала из индекса — это уже было. Слово в адресе стоит
             дешевле такого риска */}
         <Route path="/uslugi" element={<Services />} />
+        <Route path="/rabota" element={<Hire />} />
         <Route path="/privacy" element={<Privacy />} />
         {/* Английская версия — не режим отображения, а свои адреса.
             За ними после сборки лежат свои файлы: без них обещание
@@ -341,6 +360,7 @@ function Shell() {
         <Route path="/en" element={<HomePage />} />
         <Route path="/en/work/:id" element={<ProjectPage />} />
         <Route path="/en/uslugi" element={<Services />} />
+        <Route path="/en/rabota" element={<Hire />} />
         <Route path="/en/privacy" element={<Privacy />} />
         {/* Раньше на неизвестный адрес отдавалась главная. Человек
             при этом видел рабочий сайт по неправильному адресу и не

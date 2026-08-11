@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef } from 'react'
+﻿import { useRef } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useLang } from '../i18n/lang'
 import { PROFILE } from '../data/profile'
@@ -55,7 +55,15 @@ export function ProjectPage() {
 
   useAuroraSection(
     headRef,
-    { cx: 0.94, cy: 0.42, radius: 0.26, form: 0.6, intensity: 0.95, shift: 0.12, ...tone },
+    /*
+      Верхний правый угол, рядом с названием проекта: это первый кадр
+      страницы, и держится он до первого движения колеса.
+
+      Выше не поднимается: шапка набрана поверх содержимого режимом
+      наложения, и на ярком пятне её строка выбивает белый
+      прямоугольник во всю свою высоту.
+    */
+    { cx: 0.94, cy: 0.62, radius: 0.24, form: 0.6, intensity: 0.95, shift: 0.12, ...tone },
     // Пересекая колонку, шар сжимается почти в точку. Крупное пятно,
     // проезжающее сквозь абзац, читать мешает, а маленькое проходит
     // между строк и работает как отбивка
@@ -93,10 +101,6 @@ export function ProjectPage() {
     shift: 0.9,
     ...tone,
   })
-
-  useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [id])
 
   // Несуществующий проект — та же страница, что и любой другой
   // неизвестный адрес. Отдельная короткая заглушка на этом месте
