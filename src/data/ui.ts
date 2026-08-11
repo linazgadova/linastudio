@@ -6,6 +6,7 @@ export const UI = {
   navWork: { ru: 'Проекты', en: 'Work' } as L,
   navAbout: { ru: 'Обо мне', en: 'About' } as L,
   navContact: { ru: 'Контакты', en: 'Contact' } as L,
+  navServices: { ru: 'Услуги', en: 'Services' } as L,
   available: { ru: 'Открыта к работе', en: 'Open to work' } as L,
   switchLang: { ru: 'Switch to English', en: 'Переключить на русский' } as L,
 
@@ -129,6 +130,11 @@ export const UI = {
     ru: 'Что я веду сама в каждом проекте, стек, формат работы и открытый код этого сайта',
     en: 'What I run myself on each project, the stack, the working format and this site’s open source',
   } as L,
+
+  /* Подпись раздела ссылок в подвале. Нужна озвучке: без неё
+     в подвале два соседних набора ссылок без единого признака,
+     чем они отличаются */
+  footerNav: { ru: 'Страницы', en: 'Pages' } as L,
 
   emailLabel: { ru: 'Почта', en: 'Email' } as L,
   contactWrite: { ru: 'Написать на почту', en: 'Send an email' } as L,

@@ -190,6 +190,81 @@ ol {
 }
 
 /* ============================================================
+   КУРСОР
+
+   Точка вместо стрелки, выворачивающая то, что под ней.
+   Разбор решения — в components/Cursor.tsx.
+   ============================================================ */
+
+.cursor {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  /* Родной курсор прячется только там, где этот действительно
+     появился: атрибут ставит сам скрипт. Не выполнится он — человек
+     останется со стрелкой, а не с пустым экраном */
+  :root[data-cursor='on'],
+  :root[data-cursor='on'] a,
+  :root[data-cursor='on'] button,
+  :root[data-cursor='on'] summary,
+  :root[data-cursor='on'] label {
+    cursor: none;
+  }
+
+  /* Над полем ввода родная палка возвращается: точка не показывает,
+     куда встанет буква, а вслепую текст не набирают */
+  :root[data-cursor='on'] input,
+  :root[data-cursor='on'] textarea {
+    cursor: text;
+  }
+
+  .cursor {
+    display: block;
+    position: fixed;
+    /* До первого движения мыши точки нет: иначе она стоит в левом
+       верхнем углу, куда её поставил нулевой transform */
+    opacity: 0;
+    top: 0;
+    left: 0;
+    z-index: 401;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--paper);
+    /* Выворот вместо цвета: сайт светлый, подвал чернильный, шар
+       переливается — одной краски, видной везде, тут нет */
+    mix-blend-mode: difference;
+    pointer-events: none;
+    will-change: transform;
+    transition:
+      width 0.28s var(--ease),
+      height 0.28s var(--ease),
+      opacity 0.2s var(--ease);
+  }
+
+  .cursor[data-live='on'] {
+    opacity: 1;
+  }
+
+  .cursor[data-on='grab'] {
+    width: 34px;
+    height: 34px;
+  }
+
+  .cursor[data-press='on'] {
+    width: 9px;
+    height: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor {
+    transition: none;
+  }
+}
+
+/* ============================================================
    АВРОРА
 
    Один холст на весь сайт, зафиксированный за содержимым.
@@ -1931,7 +2006,22 @@ main,
   margin-top: 2rem;
 }
 
+/*
+  КНОПКА
+
+  Наведение заливает её снизу вверх, а не подсвечивает рамку. Заливка
+  — псевдоэлемент, который едет по transform: движется композитный
+  слой, страница под ним не пересчитывается. Прежний вариант поднимал
+  всю кнопку на пиксель, и на строке из трёх кнопок подряд это
+  читалось дрожью, а не откликом.
+
+  Направление снизу вверх выбрано под чтение: палец идёт к кнопке
+  снизу, заливка идёт ему навстречу.
+*/
 .btn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
@@ -1944,12 +2034,38 @@ main,
   text-decoration: none;
   cursor: pointer;
   transition:
-    border-color 0.25s var(--ease),
-    transform 0.25s var(--ease);
+    color 0.3s var(--ease),
+    border-color 0.3s var(--ease);
 }
-.btn:hover {
-  border-color: var(--cool);
-  transform: translateY(-1px);
+
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  background: var(--ink);
+  transform: translateY(101%);
+  transition: transform 0.42s var(--ease);
+}
+
+.btn:hover,
+.btn:focus-visible {
+  color: var(--paper-pure);
+  border-color: var(--ink);
+}
+
+.btn:hover::before,
+.btn:focus-visible::before {
+  transform: translateY(0);
+}
+
+/* Значок внутри кнопки едет вместе с заливкой: он часть жеста,
+   а не отдельная анимация */
+.btn svg {
+  transition: transform 0.42s var(--ease);
+}
+.btn:hover svg {
+  transform: translateX(2px);
 }
 
 /* Заливкой набирается ровно одно действие из пары — то, которое
@@ -1960,41 +2076,277 @@ main,
   border-color: var(--ink);
   color: var(--paper-pure);
 }
-.btn--solid:hover {
+
+/* У тёмной кнопки заливка обратная — малиновая: чёрным по чёрному
+   наведение не показать */
+.btn--solid::before {
+  background: var(--hot);
+}
+.btn--solid:hover,
+.btn--solid:focus-visible {
+  border-color: var(--hot);
+}
+
+/*
+  Копирование сработало.
+
+  Это единственная кнопка на сайте, после которой не происходит
+  ничего видимого: адрес ушёл в буфер, страница осталась прежней.
+  Поэтому здесь отклик держится сам, без наведения: мятная заливка
+  стоит на месте, пока не сменится подпись.
+*/
+.btn[data-done] {
+  color: var(--paper-pure);
+  border-color: var(--mint);
+}
+.btn[data-done]::before {
+  background: var(--mint);
+  transform: translateY(0);
+}
+
+/* ============================================================
+   ПОДВАЛ
+
+   Держится на одной вещи — имени студии во всю ширину экрана,
+   подрезанном снизу. Это самый крупный набор на сайте, крупнее
+   первого экрана, и единственный, который выходит за поля.
+
+   Бумага, а не чернила. Тёмная плашка внизу светлого сайта — приём
+   рабочий, но чужой: он закрывает собой шар, который к этому месту
+   как раз выкатывается в центр, и обрывает холодную бумагу ровно
+   там, где она должна закончиться сама.
+   ============================================================ */
+
+.footer {
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid var(--rule);
+  padding-top: clamp(2.5rem, 6vw, 5rem);
+  overflow: hidden;
+}
+
+.footer__top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: clamp(1.25rem, 3vw, 2rem) clamp(2rem, 5vw, 4rem);
+  align-items: center;
+}
+
+.footer__act {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+/*
+  Кнопка подвала.
+
+  Заливка приходит снизу: палец идёт к кнопке снизу, и отклик идёт
+  ему навстречу. Едет псевдоэлемент по transform — движется
+  композитный слой, страница под ним не пересчитывается.
+*/
+.fbtn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.4rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--ink);
+  font-size: var(--step-small);
+  text-decoration: none;
+  transition:
+    color 0.3s var(--ease),
+    border-color 0.3s var(--ease);
+}
+
+.fbtn::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  background: var(--ink);
+  transform: translateY(101%);
+  transition: transform 0.42s var(--ease);
+}
+
+.fbtn:hover,
+.fbtn:focus-visible {
+  color: var(--paper-pure);
   border-color: var(--ink);
 }
 
-.footer {
-  border-top: 1px solid var(--rule);
-  padding-block: 2rem 2.5rem;
+.fbtn:hover::before,
+.fbtn:focus-visible::before {
+  transform: translateY(0);
 }
 
-.footer__inner {
+.fbtn svg {
+  transition: transform 0.42s var(--ease);
+}
+.fbtn:hover svg {
+  transform: translateX(3px);
+}
+
+.fbtn--solid {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper-pure);
+}
+
+/* У тёмной кнопки заливка обратная — малиновая: чёрным по чёрному
+   наведение не показать */
+.fbtn--solid::before {
+  background: var(--hot);
+}
+.fbtn--solid:hover,
+.fbtn--solid:focus-visible {
+  border-color: var(--hot);
+}
+
+.footer__nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem 2rem;
-  align-items: baseline;
-  justify-content: space-between;
+  justify-content: flex-end;
+  gap: 0.5rem 1.5rem;
 }
 
-/* Ссылка на политику. Подчёркивание сразу, а не по наведению:
-   на телефоне наведения нет, а ссылку от подписи рядом надо
-   отличать без него */
-.note--link {
+/*
+  Ссылка подчёркивается ростом линии от левого края.
+
+  Линия — псевдоэлемент в один пиксель, и растёт она через
+  transform: scaleX. Саму text-decoration анимировать нельзя,
+  а background-size заставляет браузер перерисовывать строку.
+*/
+.footer__link {
+  position: relative;
+  display: inline-block;
   color: var(--ink-2);
-  text-decoration: underline;
-  text-underline-offset: 0.3em;
-  text-decoration-color: var(--rule);
-}
-.note--link:hover {
-  color: var(--ink);
-  text-decoration-color: var(--hot);
+  font-size: var(--step-small);
+  text-decoration: none;
+  transition: color 0.25s var(--ease);
 }
 
-.footer__note {
-  font-size: var(--step-small);
+.footer__link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 1px;
+  background: var(--hot);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s var(--ease);
+}
+
+.footer__link:hover {
+  color: var(--ink);
+}
+
+.footer__link:hover::after {
+  transform: scaleX(1);
+}
+
+/*
+  ИМЯ СТУДИИ
+
+  Кегль в долях ширины окна, а не ступенями: строка обязана доходить
+  до обоих краёв на любом экране, и единственная величина, от которой
+  это зависит, — сама ширина. Делитель подобран по слову LINA STUDIO
+  в этом начертании.
+
+  Нижнюю четверть срезает край подвала. Целое слово внизу читалось бы
+  заголовком нового раздела, подрезанное — подписью.
+*/
+.footer__sign {
+  display: flex;
+  justify-content: center;
+  margin-top: clamp(1.75rem, 4vw, 3.5rem);
+  margin-bottom: -0.13em;
+  font-family: var(--font-display);
+  font-size: 17.9vw;
+  font-weight: 200;
+  line-height: 0.78;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  user-select: none;
+}
+
+/*
+  Каждая буква отзывается сама.
+
+  Уменьшение и цвет — на transform и color, поэтому соседние буквы
+  стоят на месте: рука ведёт по слову, а строка не шевелится.
+  Точка отсчёта у нижнего края буквы: она садится на базовую линию,
+  а не уплывает от неё к середине.
+*/
+.footer__sign-ch {
+  display: inline-block;
+  transform-origin: 50% 100%;
+  transition:
+    transform 0.35s var(--ease),
+    color 0.35s var(--ease);
+}
+
+.footer__sign-ch:hover {
+  color: var(--hot);
+  transform: scale(0.82);
+}
+
+/* Пробел между словами: в разложенной по буквам строке настоящего
+   пробела нет — каждая буква стоит отдельным предметом */
+.footer__sign-gap {
+  width: 0.24em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footer__sign-ch {
+    transition: color 0.35s var(--ease);
+  }
+  .footer__sign-ch:hover {
+    transform: none;
+  }
+}
+
+.footer__meta {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 2.5rem;
+  padding-block: 1.5rem;
+  border-top: 1px solid var(--rule);
+  background: var(--paper);
+}
+
+.footer__mnote {
+  font-family: var(--font-mono);
+  font-size: var(--step-label);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--ink-3);
-  max-width: 54ch;
+}
+
+.footer .iks {
+  margin-left: auto;
+}
+
+@media (max-width: 760px) {
+  .footer__top {
+    grid-template-columns: 1fr;
+  }
+  .footer__nav {
+    justify-content: flex-start;
+  }
+  .footer .iks {
+    margin-left: 0;
+  }
 }
 
 /* ============================================================
@@ -2671,8 +3023,8 @@ main,
   border-radius: 50%;
 }
 
-.hire__cta-lede {
-  margin-top: 0.7rem;
+.hire__cta-links {
+  margin-top: 1.2rem;
 }
 
 /* Средний экран: три колонки кода в 1000 пикселей уже не влезают

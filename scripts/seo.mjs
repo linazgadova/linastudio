@@ -1031,7 +1031,6 @@ ${hire.format.map((f) => `    <li>${esc(T(f, lang))}</li>`).join('\n')}
   </ul>
 
   <h2>${esc(T(hire.ctaTitle, lang))}</h2>
-  <p>${esc(T(hire.ctaLede, lang))}</p>
   <p>
     <a href="https://t.me/${esc(profile.telegram)}">Telegram: @${esc(profile.telegram)}</a><br />
     <a href="mailto:${esc(profile.email)}">${esc(T(LABEL.mail, lang))}: ${esc(profile.email)}</a><br />

@@ -102,7 +102,30 @@ export function Contact() {
           </a>
 
           <div className="contact__links">
-            <button type="button" className="btn" onClick={copyEmail}>
+            {/* Значок меняется вместе с подписью: галочка — то, что
+                видно раньше слова, а слово подтверждает, что именно
+                скопировалось */}
+            <button type="button" className="btn" onClick={copyEmail} data-done={copied ? '' : undefined}>
+              <svg viewBox="0 0 16 16" width="13" height="13" aria-hidden="true">
+                {copied ? (
+                  <path
+                    d="M3.5 8.5 6.5 11.5 12.5 5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                ) : (
+                  <path
+                    d="M5.5 5.5V3.2h7.3v7.3h-2.3M3.2 5.5h7.3v7.3H3.2z"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.3"
+                    strokeLinejoin="round"
+                  />
+                )}
+              </svg>
               {copied ? t(UI.copied) : t(UI.copyEmail)}
             </button>
 
@@ -114,6 +137,16 @@ export function Contact() {
                 rel="noopener noreferrer"
               >
                 GitHub
+                <svg viewBox="0 0 14 14" width="11" height="11" aria-hidden="true">
+                  <path
+                    d="M4 10 10 4M10 4H5.2M10 4v4.8"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </a>
             )}
           </div>
@@ -163,15 +196,110 @@ function useConsent(): boolean {
   return ok
 }
 
+/**
+ * ПОДВАЛ
+ *
+ * Заканчивает страницу, а не подписывает её. Внизу человек либо
+ * уходит, либо ищет дорогу дальше, и здесь лежит и то и другое:
+ * адреса, разделы, обязательная политика.
+ *
+ * Держится всё на имени студии во всю ширину экрана, подрезанном
+ * снизу. Это самый крупный набор на сайте — крупнее первого экрана,
+ * — и единственный, который выходит за поля.
+ */
 export function Footer() {
   const { lang, t, path } = useLang()
   const surname = t(PROFILE.surname)
   const consented = useConsent()
 
+  const pages = [
+    { to: `${path('/')}#work`, label: t(UI.navWork) },
+    { to: path('/uslugi'), label: t(UI.navServices) },
+    { to: path('/rabota'), label: t(UI.hireName) },
+  ]
+
   return (
     <footer className="footer">
-      <div className="shell footer__inner">
-        <p className="note">
+      <div className="shell footer__top">
+        <div className="footer__act">
+          {PROFILE.telegram && (
+            <a
+              className="fbtn fbtn--solid"
+              href={`https://t.me/${PROFILE.telegram}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t(UI.writeTelegram)}
+              <svg viewBox="0 0 14 14" width="12" height="12" aria-hidden="true">
+                <path
+                  d="M2.5 7h9M8 3.5 11.5 7 8 10.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </a>
+          )}
+          <a className="fbtn" href={`mailto:${PROFILE.email}`}>
+            {PROFILE.email}
+          </a>
+        </div>
+
+        <nav className="footer__nav" aria-label={t(UI.footerNav)}>
+          {pages.map((p) => (
+            <Link className="footer__link" to={p.to} key={p.to}>
+              {p.label}
+            </Link>
+          ))}
+          {PROFILE.github && (
+            <a
+              className="footer__link"
+              href={`https://github.com/${PROFILE.github}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              GitHub
+            </a>
+          )}
+        </nav>
+      </div>
+
+      {/*
+        Подпись во всю ширину, подрезанная снизу.
+
+        Здесь имя студии, а не имя человека: адрес сайта — linastudio,
+        и подпись под ним должна совпадать с тем, что человек набрал
+        в строке браузера. Фамилия стоит ниже, в копирайте.
+
+        Единственное место на сайте, где буквы выходят за поля и за
+        край экрана. Кегль считается в долях ширины окна, поэтому
+        строка садится по краям одинаково и на телефоне, и на
+        мониторе, а нижнюю четверть срезает край подвала.
+
+        Буквы разложены по отдельности ради наведения: каждая
+        отзывается сама, и рука ведёт по слову, как по клавишам.
+        Уменьшение делается transform — раскладка от него не
+        меняется, и соседние буквы стоят на месте.
+
+        aria-hidden: адрес сайта озвучке ни к чему, а по буквам она
+        прочитала бы его как «эль-и-эн-а».
+      */}
+      <p className="footer__sign" aria-hidden="true">
+        {[...'LINA STUDIO'].map((ch, i) =>
+          ch === ' ' ? (
+            <span className="footer__sign-gap" key={i} />
+          ) : (
+            <span className="footer__sign-ch" key={i}>
+              {ch}
+            </span>
+          ),
+        )}
+      </p>
+
+      <div className="shell footer__meta">
+        <p className="footer__mnote">
           © {new Date().getFullYear()} · {t(PROFILE.name)}
           {surname ? ` ${surname}` : ''} · {t(PROFILE.location)}
         </p>
@@ -179,7 +307,7 @@ export function Footer() {
         {/* Политика обработки данных живёт в подвале, а не в меню:
             её ищут именно здесь, и по закону она должна быть
             доступна с любой страницы сайта */}
-        <Link className="note note--link" to={path('/privacy')}>
+        <Link className="footer__link footer__mnote" to={path('/privacy')}>
           {t(UI.privacyLink)}
         </Link>
 
@@ -187,21 +315,16 @@ export function Footer() {
           Значок качества сайта от Яндекса.
 
           Он появляется только после согласия на аналитику, и это не
-          перестраховка: значок — картинка с сервера Яндекса, то есть
-          такое же обращение к третьей стороне, как и счётчик. Грузить
-          её до ответа значило бы обойти собственное окно с вопросом,
+          перестраховка: значок — картинка с сервера Яндекса, такое же
+          обращение к третьей стороне, как и счётчик. Грузить её до
+          ответа значило бы обойти собственное окно с вопросом,
           а заодно разойтись с политикой, где написано обратное.
 
           Размеры проставлены числами: картинка приезжает с чужого
           сервера, и без них подвал подпрыгивает в момент её появления.
         */}
         {SHOW_IKS && consented && (
-          <a
-            className="iks"
-            href={iksLink(SITE_URL)}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+          <a className="iks" href={iksLink(SITE_URL)} target="_blank" rel="noopener noreferrer">
             <img
               src={iksImage(SITE_URL, lang)}
               width={88}

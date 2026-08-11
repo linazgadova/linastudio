@@ -119,9 +119,14 @@ export const HIRE = {
     { ru: 'Английский рабочий: сайт и разборы проектов написаны на двух языках', en: 'English is working level: the site and the project write-ups exist in both languages' },
   ] as L[],
 
-  ctaTitle: { ru: 'Написать', en: 'Get in touch' } as L,
-  ctaLede: {
-    ru: 'Отвечаю в тот же день. Резюме пришлю письмом, вилку назову в ответ на вакансию, любой проект разберу вслух — включая закрытый.',
-    en: 'I reply the same day. The CV comes by email, the salary range comes in reply to the ad, and I will walk through any project out loud — the private one included.',
-  } as L,
+  /*
+   * В конце страницы только адреса.
+   *
+   * Приглашения написать тут не будет: адрес страницы уходит в отклик
+   * на вакансию, ответ приходит в переписку на площадке, и никто не
+   * пойдёт с этой страницы искать телеграм. Контакты здесь на случай,
+   * когда страницу переслали дальше, — а строка «отвечу в тот же
+   * день» на этом месте обращена в пустоту.
+   */
+  ctaTitle: { ru: 'Контакты', en: 'Contacts' } as L,
 }

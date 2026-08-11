@@ -22,6 +22,7 @@ import { Privacy } from './pages/Privacy'
 import { Services } from './pages/Services'
 import { Hire } from './pages/Hire'
 import { Cookies } from './components/Cookies'
+import { Cursor } from './components/Cursor'
 import { AuroraFlat, useOrbSupport } from './aurora/flat'
 
 /*
@@ -371,6 +372,10 @@ function Shell() {
 
       <Footer />
       <Cookies />
+      {/* Последним в дереве, потому что он лежит поверх всего:
+          порядок узлов решает спор одинаковых z-index, а у окна
+          согласия он свой и выше */}
+      <Cursor />
     </>
   )
 }
