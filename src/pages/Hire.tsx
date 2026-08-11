@@ -116,6 +116,14 @@ export function Hire() {
           <p className="hire__lede">{t(HIRE.layersLede)}</p>
         </Reveal>
 
+        {/* Подсказка видна только на узком экране: там таблица
+            разложена в ленту карточек, и без неё непонятно, что
+            вбок есть ещё шесть */}
+        <p className="hire__swipe" aria-hidden="true">
+          {t(HIRE.swipe)}
+          <span className="hire__swipe-arrow">→</span>
+        </p>
+
         <Reveal className="hire__tablewrap hire__veil" delay={60}>
           <table className="hire__table">
             <thead>
@@ -156,13 +164,18 @@ export function Hire() {
                     const mine = p.layers.includes(l.id)
                     return (
                       <td className="hire__cell" data-on={mine ? '1' : undefined} key={l.id}>
-                        {/* Точка держит матрицу на широком экране, имя
-                            слоя — на узком, где таблица разбирается на
-                            блоки. Ответ для озвучки идёт словами: сама
-                            точка ей ничего не говорит */}
+                        {/* Точка держит матрицу на широком экране: там
+                            над ней стоит подпись столбца. На узком
+                            подписи столбцов нет, и слой называется
+                            полным именем — сокращения «Диз» и «Инт»
+                            вне таблицы не читаются никак.
+
+                            Озвучке ответ идёт словами: ни точка, ни имя
+                            само по себе не говорят, вела она слой
+                            или нет */}
                         <span className="hire__dot" aria-hidden="true" />
                         <span className="hire__lname" aria-hidden="true">
-                          {t(l.short)}
+                          {t(l.title)}
                         </span>
                         <span className="sr-only">
                           {t(l.title)} — {mine ? t(HIRE.layerYes) : t(HIRE.layerNo)}

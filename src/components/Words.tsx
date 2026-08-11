@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 
 /**
  * ЗАГОЛОВОК, ВСТАЮЩИЙ ПО СЛОВАМ
@@ -13,10 +13,11 @@ import { useEffect, useRef, useState } from 'react'
  * Едет transform, а не отступ, — раскладка страницы при этом не
  * пересчитывается ни разу.
  *
- * Пробелы восстановлены явными узлами. Слова разложены по
- * отдельным блокам, и настоящих пробелов между ними в разметке
- * не остаётся: без этого «Как это устроено» слиплось бы в одно
- * слово при переносе строки и при чтении озвучкой.
+ * Пробел стоит между окошками, а не внутри окошка. Внутри его
+ * съедало overflow: hidden — концевой пробел в блочном элементе
+ * браузер отбрасывает, и «Давайте поговорим» слипалось в одно
+ * слово. Снаружи он остаётся обычным пробелом строки: по нему
+ * переносится строка, его же читает озвучка.
  *
  * Наблюдатель отключается после первого срабатывания: заголовок
  * встаёт один раз и при обратной прокрутке не прячется.
@@ -61,12 +62,14 @@ export function Words({ children, className = '', id, as = 'h2' }: Props) {
   return (
     <Tag ref={ref} id={id} className={`words${visible ? ' is-in' : ''} ${className}`.trim()}>
       {words.map((w, i) => (
-        <span className="words__box" key={`${w}-${i}`}>
-          <span className="words__w" style={{ ['--i' as string]: i }}>
-            {w}
+        <Fragment key={`${w}-${i}`}>
+          <span className="words__box">
+            <span className="words__w" style={{ ['--i' as string]: i }}>
+              {w}
+            </span>
           </span>
           {i < words.length - 1 && ' '}
-        </span>
+        </Fragment>
       ))}
     </Tag>
   )
