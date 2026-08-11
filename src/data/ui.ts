@@ -4,10 +4,7 @@ import type { L } from '../i18n/lang'
 export const UI = {
   skipToContent: { ru: 'К основному содержимому', en: 'Skip to content' } as L,
   navWork: { ru: 'Проекты', en: 'Work' } as L,
-  navAbout: { ru: 'Обо мне', en: 'About' } as L,
-  navContact: { ru: 'Контакты', en: 'Contact' } as L,
   navServices: { ru: 'Услуги', en: 'Services' } as L,
-  available: { ru: 'Открыта к работе', en: 'Open to work' } as L,
   switchLang: { ru: 'Switch to English', en: 'Переключить на русский' } as L,
 
   workTitle: { ru: 'Проекты', en: 'Work' } as L,
@@ -16,7 +13,6 @@ export const UI = {
     en: 'Each one opens into how it works and what part of it was mine.',
   } as L,
 
-  notFound: { ru: 'Такого проекта нет', en: 'No such project' } as L,
 
   /** Хвост описания страницы проекта. Лежит здесь, а не в генераторе
       страниц, потому что нужен обоим: и файлу для робота, и живой
@@ -76,10 +72,6 @@ export const UI = {
   backToWork: { ru: 'Все проекты', en: 'All work' } as L,
   backHome: { ru: 'На главную', en: 'Home' } as L,
   nextProject: { ru: 'Следующий проект', en: 'Next project' } as L,
-  projectAsk: {
-    ru: 'Нужно похожее? Напишите, что за продукт, и я отвечу, за какой срок это реально.',
-    en: 'Need something like this? Tell me what the product is and I’ll come back with a realistic timeline.',
-  } as L,
   writeTelegram: { ru: 'Написать в Telegram', en: 'Message me on Telegram' } as L,
   closedNote: {
     ru: 'Внутренняя система агентства — открытой ссылки нет. Показываю по запросу: демо-сборка на выдуманных данных.',
@@ -92,13 +84,7 @@ export const UI = {
   shotZoomOff: { ru: 'Вписать в экран', en: 'Fit to screen' } as L,
 
   inside: { ru: 'Что внутри', en: 'What’s inside' } as L,
-  insideShow: { ru: 'Показать, что внутри', en: 'Show what’s inside' } as L,
-  insideHide: { ru: 'Свернуть', en: 'Collapse' } as L,
   openSite: { ru: 'Открыть сайт', en: 'Open site' } as L,
-  gatedNote: {
-    ru: 'Система закрытая — по ссылке виден экран входа. Демо-доступ дам по запросу.',
-    en: 'The system is private — the link shows the login screen. I can give demo access on request.',
-  } as L,
   /** Подпись под роликом прохода по живому сайту. */
   clipCaption: {
     ru: 'Проход по живому сайту: то, чего не видно на скриншоте',
@@ -107,7 +93,6 @@ export const UI = {
   layersLabel: { ru: 'Слои', en: 'Layers' } as L,
   stackLabel: { ru: 'Стек', en: 'Stack' } as L,
   roleLabel: { ru: 'Роль', en: 'Role' } as L,
-  yearLabel: { ru: 'Год', en: 'Year' } as L,
 
   /* Не «Услуги», а обещание того, что там лежит. Ссылка стоит под
      списком из шести слов, и «Услуги» после них не добавляет ничего */
@@ -131,9 +116,10 @@ export const UI = {
     en: 'What I run myself on each project, the stack, the working format and this site’s open source',
   } as L,
 
-  /* Подпись раздела ссылок в подвале. Нужна озвучке: без неё
-     в подвале два соседних набора ссылок без единого признака,
-     чем они отличаются */
+  /* Подписи двух столбцов подвала. Слева адреса, справа страницы,
+     и без подписей это два соседних набора ссылок без единого
+     признака, чем они отличаются */
+  footerReach: { ru: 'Связаться', en: 'Get in touch' } as L,
   footerNav: { ru: 'Страницы', en: 'Pages' } as L,
 
   /* Все пять вопросов свёрнуты под одну строку. Раскрытые
@@ -152,7 +138,6 @@ export const UI = {
   cursorCopy: { ru: 'Скопировать', en: 'Copy' } as L,
 
   emailLabel: { ru: 'Почта', en: 'Email' } as L,
-  contactWrite: { ru: 'Написать на почту', en: 'Send an email' } as L,
   copied: { ru: 'Скопировано', en: 'Copied' } as L,
   copyEmail: { ru: 'Скопировать адрес', en: 'Copy address' } as L,
 

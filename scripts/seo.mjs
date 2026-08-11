@@ -436,6 +436,10 @@ function withBody(page, body) {
 
 const OG_FALLBACK = '/og.jpg'
 
+/* Все технологии портфолио, каждая по одному разу и в том порядке,
+   в каком они идут по проектам */
+const STACKS = [...new Set(projects.flatMap((p) => p.stack))]
+
 function personNode(lang) {
   return {
     '@type': 'Person',
@@ -465,27 +469,23 @@ function personNode(lang) {
       occupationLocation: { '@type': 'City', name: lang === 'ru' ? 'Москва' : 'Moscow' },
     },
     worksFor: { '@id': `${SITE}/#practice` },
-    knowsAbout:
-      lang === 'ru'
-        ? [
-            'веб-дизайн',
-            'разработка сайтов',
-            'интернет-магазины',
-            'веб-приложения',
-            'React',
-            'Next.js',
-            'Supabase',
-          ]
-        : [
-            'web design',
-            'website development',
-            'online stores',
-            'web applications',
-            'React',
-            'Next.js',
-            'Supabase',
-          ],
+    /*
+      Чем занимается — словами, и чем именно — названиями из стеков.
+
+      Вторая половина списка собрана из стеков самих проектов, а не
+      выписана руками. Руками здесь стояло три названия из сорока
+      настоящих, и главное — это была вторая копия списка, который
+      уже есть в проектах. Разошлись бы они молча, а расхождение тут
+      означает разметку, обещающую технологию, за которой нет работы.
+    */
+    knowsAbout: [
+      ...(lang === 'ru'
+        ? ['веб-дизайн', 'разработка сайтов', 'интернет-магазины', 'веб-приложения']
+        : ['web design', 'website development', 'online stores', 'web applications']),
+      ...STACKS,
+    ],
     knowsLanguage: ['ru', 'en'],
+    description: `${T(hero.claim, lang)} ${T(hero.detail, lang)}`,
   }
 }
 
@@ -623,6 +623,22 @@ function projectBody(p, lang) {
   const clip = clipOf(p.id)
   const bare = `/work/${p.id}`
 
+  /*
+    Обложка идёт в тело картинкой, а не только строкой в карте сайта.
+
+    Карту сайта читает поиск по картинкам, но не читает никто больше:
+    языковой модели, разбирающей страницу, о снимке продукта оттуда
+    не узнать, а Яндексу картинка в разметке нужнее, чем ссылка
+    в отдельном файле.
+
+    Отложенная загрузка обязательна. Эту разметку человек не видит —
+    React заменяет её собой, — и без loading="lazy" браузер успел бы
+    скачать снимок до того, как узел исчезнет.
+  */
+  const cover = built(p.cover)
+  const size = cover ? sizeOf(cover) : null
+  const shotAlt = `${T(p.name, lang)} — ${T(p.tagline, lang)}`
+
   return `<main id="main" class="shell">
 ${langSwitch(bare, lang)}
   <p><a href="${loc('/', lang)}">← ${esc(T(profile.name, lang))} ${esc(T(profile.surname, lang))}</a> · <a href="${loc('/', lang)}#work">${esc(T(LABEL.allWork, lang))}</a></p>
@@ -636,6 +652,11 @@ ${
   p.url
     ? `  <p><a href="${esc(p.url)}" rel="noopener">${esc(T(LABEL.open, lang))}: ${esc(p.url)}</a></p>`
     : `  <p>${esc(T(LABEL.closed, lang))}</p>`
+}
+${
+  cover
+    ? `  <p><img src="${cover}" alt="${esc(shotAlt)}"${size ? ` width="${size.w}" height="${size.h}"` : ''} loading="lazy" /></p>`
+    : ''
 }
 ${clip ? `  <p><video src="${clip}" muted loop playsinline preload="none"></video></p>` : ''}
 
@@ -1054,7 +1075,10 @@ for (const lang of LANGS) {
         cover: OG_FALLBACK,
         coverAlt: T(hire.title, lang),
         graph: [
-          personNode(lang),
+          /* Связь «человек ищет вот это» идёт от человека к запросу,
+             а не наоборот: свойство seeks есть только у Person, и без
+             него узел ниже висел бы сам по себе, ничей */
+          { ...personNode(lang), seeks: { '@id': `${url}#seeks` } },
           siteNode(lang),
           {
             '@type': 'BreadcrumbList',
@@ -1082,6 +1106,37 @@ for (const lang of LANGS) {
             about: { '@id': `${SITE}/#person` },
             inLanguage: lang,
             dateModified: stamp(lastmod(loc(bare, lang), JSON.stringify([lang, hire, limits]))),
+          },
+          {
+            /*
+              Чего человек ищет — отдельным узлом и только здесь.
+
+              Поисковой выдаче он ничего не даёт: расширенных
+              результатов по seeks нет ни у Яндекса, ни у Google.
+              Читают его языковые модели, и на вопрос «кого можно
+              позвать продуктовым дизайнером в Москве» отвечают уже
+              не пересказом страницы, а этими полями.
+
+              На главной и на услугах его нет намеренно: там разговор
+              с заказчиком, и объявление о поиске работы посреди него
+              сбивает и человека, и робота.
+            */
+            '@type': 'Demand',
+            '@id': `${url}#seeks`,
+            name: T(hire.title, lang),
+            description: T(hire.seoDescription, lang),
+            availableAtOrFrom: {
+              '@type': 'Place',
+              address: {
+                '@type': 'PostalAddress',
+                addressLocality: lang === 'ru' ? 'Москва' : 'Moscow',
+                addressCountry: 'RU',
+              },
+            },
+            areaServed: [
+              { '@type': 'City', name: lang === 'ru' ? 'Москва' : 'Moscow' },
+              { '@type': 'Country', name: lang === 'ru' ? 'Россия' : 'Russia' },
+            ],
           },
         ],
       }),

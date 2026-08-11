@@ -249,80 +249,105 @@ export function Footer() {
 
   return (
     <footer className="footer" ref={ref}>
+      {/*
+        Два столбца: слева адреса, справа страницы. Шести предметов
+        в один ряд хватает, чтобы подвал прочитался панелью
+        управления, а не концом страницы, и чтобы стало непонятно,
+        где тут адреса, а где разделы.
+
+        Мелочь — копирайт и значок качества — стоит внизу тех же
+        столбцов, а не своим ярусом: читают её примерно никогда,
+        а место она занимала наравне с адресами.
+      */}
       <div className="shell footer__top">
-        <div className="footer__act">
-          {PROFILE.telegram && (
-            <Btn
-              solid
-              label={t(UI.writeTelegram)}
-              href={`https://t.me/${PROFILE.telegram}`}
-              icon={
-                <svg viewBox="0 0 14 14" width="12" height="12" aria-hidden="true">
-                  <path
-                    d="M2.5 7h9M8 3.5 11.5 7 8 10.5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              }
-            />
-          )}
-          <Btn label={PROFILE.email} href={`mailto:${PROFILE.email}`} />
-          {/* Гитхаб стоит рядом с почтой, а не в списке страниц: это
-              такой же адрес, по которому с ней связываются, и в отклике
-              на вакансию его спрашивают вместе с ними */}
-          {PROFILE.github && <Btn label="GitHub" href={`https://github.com/${PROFILE.github}`} />}
+        <div className="footer__col">
+          <p className="footer__coltitle">{t(UI.footerReach)}</p>
+
+          <div className="footer__act">
+            {PROFILE.telegram && (
+              <Btn
+                solid
+                label={t(UI.writeTelegram)}
+                href={`https://t.me/${PROFILE.telegram}`}
+                icon={
+                  <svg viewBox="0 0 14 14" width="12" height="12" aria-hidden="true">
+                    <path
+                      d="M2.5 7h9M8 3.5 11.5 7 8 10.5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                }
+              />
+            )}
+            <div className="footer__pair">
+              <Btn label={PROFILE.email} href={`mailto:${PROFILE.email}`} />
+              {/* Гитхаб стоит рядом с почтой, а не в списке страниц: это
+                  такой же адрес, по которому с ней связываются, и в отклике
+                  на вакансию его спрашивают вместе с ними */}
+              {PROFILE.github && (
+                <Btn label="GitHub" href={`https://github.com/${PROFILE.github}`} />
+              )}
+            </div>
+          </div>
+
+          <p className="footer__mnote">
+            © {new Date().getFullYear()} · {t(PROFILE.name)}
+            {surname ? ` ${surname}` : ''} · {t(PROFILE.location)}
+          </p>
         </div>
 
-        <nav className="footer__nav" aria-label={t(UI.footerNav)}>
-          {pages.map((p) => (
-            <Link className="footer__link" to={p.to} key={p.to}>
-              {p.label}
+        {/* Подпись столбца служит навигации названием: отдельный
+            aria-label повторил бы то же слово вторым голосом */}
+        <nav className="footer__col footer__col--nav" aria-labelledby="footer-nav-title">
+          <p className="footer__coltitle" id="footer-nav-title">
+            {t(UI.footerNav)}
+          </p>
+
+          <span className="footer__pages">
+            {pages.map((p) => (
+              <Link className="footer__link" to={p.to} key={p.to}>
+                {p.label}
+              </Link>
+            ))}
+
+            {/* Политика стоит последней среди страниц, а не отдельной
+                строкой под ними: страница она и есть, и вынесенная
+                строкой читалась отдельным прямоугольником над подписью */}
+            <Link className="footer__link footer__link--quiet" to={path('/privacy')}>
+              {t(UI.privacyLink)}
             </Link>
-          ))}
+          </span>
+
+          {/*
+            Значок качества сайта от Яндекса.
+
+            Он появляется только после согласия на аналитику, и это не
+            перестраховка: значок — картинка с сервера Яндекса, такое же
+            обращение к третьей стороне, как и счётчик. Грузить её до
+            ответа значило бы обойти собственное окно с вопросом,
+            а заодно разойтись с политикой, где написано обратное.
+
+            Размеры проставлены числами: картинка приезжает с чужого
+            сервера, и без них подвал подпрыгивает в момент её появления.
+          */}
+          {SHOW_IKS && consented && (
+            <a className="iks" href={iksLink(SITE_URL)} target="_blank" rel="noopener noreferrer">
+              <img
+                src={iksImage(SITE_URL, lang)}
+                width={88}
+                height={31}
+                loading="lazy"
+                alt={t(UI.iksAlt)}
+              />
+            </a>
+          )}
         </nav>
       </div>
 
-      <div className="shell footer__meta">
-        <p className="footer__mnote">
-          © {new Date().getFullYear()} · {t(PROFILE.name)}
-          {surname ? ` ${surname}` : ''} · {t(PROFILE.location)}
-        </p>
-
-        {/* Политика обработки данных живёт в подвале, а не в меню:
-            её ищут именно здесь, и по закону она должна быть
-            доступна с любой страницы сайта */}
-        <Link className="footer__link footer__mnote" to={path('/privacy')}>
-          {t(UI.privacyLink)}
-        </Link>
-
-        {/*
-          Значок качества сайта от Яндекса.
-
-          Он появляется только после согласия на аналитику, и это не
-          перестраховка: значок — картинка с сервера Яндекса, такое же
-          обращение к третьей стороне, как и счётчик. Грузить её до
-          ответа значило бы обойти собственное окно с вопросом,
-          а заодно разойтись с политикой, где написано обратное.
-
-          Размеры проставлены числами: картинка приезжает с чужого
-          сервера, и без них подвал подпрыгивает в момент её появления.
-        */}
-        {SHOW_IKS && consented && (
-          <a className="iks" href={iksLink(SITE_URL)} target="_blank" rel="noopener noreferrer">
-            <img
-              src={iksImage(SITE_URL, lang)}
-              width={88}
-              height={31}
-              loading="lazy"
-              alt={t(UI.iksAlt)}
-            />
-          </a>
-        )}
-      </div>
       {/*
         Подпись во всю ширину, у самого низа страницы.
 

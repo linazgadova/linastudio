@@ -295,7 +295,7 @@ export const PROJECTS: Project[] = [
       {
         title: { ru: 'Шейдер настроения', en: 'The mood shader' },
         detail: {
-          ru: 'Аура-спутник живёт на шейдере: форма и цвет меняются вместе с тем, как ты тратишь. Считывается за секунду — в отличие от столбиковой диаграммы, в которую надо вчитываться.',
+          ru: 'Аура-спутник живёт на шейдере: форма и цвет меняются вместе с тем, как расходятся деньги. Считывается за секунду — в отличие от столбиковой диаграммы, в которую надо вчитываться.',
           en: 'The aura companion runs on a shader: its shape and colour shift with how you spend. It reads in a second, unlike a bar chart you have to study.',
         },
       },

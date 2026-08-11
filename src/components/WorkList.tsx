@@ -40,15 +40,25 @@ export function WorkList() {
     },
   )
 
+  /*
+    Превью едет свойством translate, а не left и top.
+
+    Отступы двигают предмет через раскладку: браузер на каждый кадр
+    заново считает, где он стоит, и заново его рисует. Курсор при
+    этом идёт по списку из семи строк с картинкой в двадцать два
+    ряда — и просадка приходится ровно на движение мыши.
+
+    translate — отдельное свойство, не то же самое, что transform.
+    Оно и нужно отдельным: transform у превью занят сдвигом на
+    половину себя и увеличением, и у него есть переход. Положение
+    через тот же переход шло бы с запаздыванием в полсекунды.
+  */
   function move(e: React.MouseEvent) {
     const x = e.clientX
     const y = e.clientY
     cancelAnimationFrame(raf.current)
     raf.current = requestAnimationFrame(() => {
-      if (peekRef.current) {
-        peekRef.current.style.left = `${x + 190}px`
-        peekRef.current.style.top = `${y}px`
-      }
+      if (peekRef.current) peekRef.current.style.translate = `${x + 190}px ${y}px`
     })
   }
 
@@ -102,15 +112,39 @@ export function WorkList() {
         ))}
       </div>
 
-      {/* Страница для работодателя — сразу под работами. Человек тут
-          уже посмотрел, что сделано, и следующий его вопрос — что из
-          этого делала она сама. Строкой в блоке контактов эта ссылка
-          стояла в конце страницы, и до неё не долистывали */}
+      {/*
+        Страница для работодателя — сразу под работами. Человек тут
+        уже посмотрел, что сделано, и следующий его вопрос — что из
+        этого делала она сама. Строчкой в блоке контактов эта ссылка
+        стояла в конце страницы, и до неё не долистывали.
+
+        Кружок со стрелкой обязателен: без него плашка стоит восьмой
+        под семью такими же строками проектов и ничем от них не
+        отличается — заголовок, подпись, и ничего, по чему видно,
+        что это дорога вбок, а не восьмая работа.
+      */}
       <Reveal>
         <Link className="nextwork nextwork--hire" to={path('/rabota')}>
-          <span className="nextwork__label">{t(UI.hireLabel)}</span>
-          <span className="nextwork__name">{t(UI.hireName)}</span>
-          <span className="nextwork__tagline">{t(UI.hirePage)}</span>
+          <span className="nextwork__text">
+            <span className="nextwork__label">{t(UI.hireLabel)}</span>
+            <span className="nextwork__name">{t(UI.hireName)}</span>
+            <span className="nextwork__tagline">{t(UI.hirePage)}</span>
+          </span>
+
+          {/* Тот же кружок, что в конце строки проекта: у сайта уже есть
+              знак «эта строка ведёт дальше», и заводить второй незачем */}
+          <span className="nextwork__go" aria-hidden="true">
+            <svg viewBox="0 0 16 16" width="15" height="15">
+              <path
+                d="M3 8h10M9 4l4 4-4 4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
         </Link>
       </Reveal>
 

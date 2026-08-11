@@ -221,7 +221,15 @@ function useTrackPages() {
  * во время прокрутки и, если она раз за разом выходит вдвое длиннее
  * положенного, отдаёт прокрутку браузеру. Решение окончательное —
  * включать и выключать сглаживание туда-сюда хуже, чем не иметь его.
+ *
+ * Живой сглаживатель лежит в переменной рядом. Нужен он тому, кто
+ * ставит страницу на начало: Lenis ведёт свой собственный счёт
+ * прокрутки и каждый кадр записывает его в окно, а window.scrollTo
+ * этого счёта не трогает — в следующем же кадре страница возвращается
+ * туда, где была.
  */
+let smooth: Lenis | null = null
+
 function useSmoothScroll() {
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
@@ -233,6 +241,7 @@ function useSmoothScroll() {
       сглаживании — см. stage.tsx.
     */
     const lenis = new Lenis({ duration: 1.05, smoothWheel: true })
+    smooth = lenis
     let raf = 0
     let last = 0
     let strikes = 0
@@ -254,6 +263,7 @@ function useSmoothScroll() {
 
         if (strikes >= 14) {
           alive = false
+          smooth = null
           lenis.destroy()
           document.documentElement.dataset.scroll = 'native'
           return
@@ -266,6 +276,7 @@ function useSmoothScroll() {
 
     return () => {
       cancelAnimationFrame(raf)
+      smooth = null
       if (alive) lenis.destroy()
     }
   }, [])
@@ -278,13 +289,15 @@ function useSmoothScroll() {
  * проекта попадает в список работ, а не в шапку. Любой другой переход
  * начинается сверху.
  *
- * Верх нужен явно по двум причинам. Переход внутри сайта страницу не
- * перезагружает, и браузер оставляет прокрутку там, где она была:
- * ссылка снизу главной открывала услуги сразу на последнем экране.
- * А при обычной перезагрузке браузер сам возвращает прокрутку туда,
- * где человек был в прошлый раз, — на телефоне из-за этого страница
- * открывалась то с середины, то с конца. Восстановлением занимаемся
- * сами: scrollRestoration переводится в ручной режим.
+ * Верх нужен явно: переход внутри сайта страницу не перезагружает, и
+ * браузер оставляет прокрутку там, где она была, — ссылка снизу
+ * главной открывала услуги сразу на последнем экране. Запрет
+ * восстанавливать прокрутку при обычной загрузке стоит отдельно,
+ * в head страницы: оттуда он успевает раньше — см. index.html.
+ *
+ * Прокрутка ставится дважды, в окно и в сглаживатель. Одного окна
+ * мало: Lenis ведёт свой счёт и в следующем же кадре вернул бы
+ * страницу обратно.
  *
  * Второй заход через кадр — на случай, когда высота страницы ещё
  * растёт: шрифты и картинки доезжают после первой отрисовки и сдвигают
@@ -294,19 +307,20 @@ function ScrollOnRoute() {
   const { pathname, hash } = useLocation()
 
   useEffect(() => {
-    if ('scrollRestoration' in history) history.scrollRestoration = 'manual'
-  }, [])
+    const target = hash ? document.querySelector<HTMLElement>(hash) : null
 
-  useEffect(() => {
-    if (hash) {
-      const el = document.querySelector(hash)
-      if (el) {
-        el.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'start' })
+    function put() {
+      if (target) {
+        if (smooth) smooth.scrollTo(target, { immediate: true })
+        else target.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'start' })
         return
       }
+      window.scrollTo(0, 0)
+      smooth?.scrollTo(0, { immediate: true, force: true })
     }
-    window.scrollTo(0, 0)
-    const again = requestAnimationFrame(() => window.scrollTo(0, 0))
+
+    put()
+    const again = requestAnimationFrame(put)
     return () => cancelAnimationFrame(again)
   }, [pathname, hash])
 

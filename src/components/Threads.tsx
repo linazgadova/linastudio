@@ -11,6 +11,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
  *
  * Слой лежит ниже всего, под шаром, и не ловит курсор.
  *
+ * Штрихи вдоль линий бегут от прокрутки, а не от часов, — разбор
+ * в стилях, у правила .threads path.
+ *
  * Система координат подбирается под реальные пропорции документа.
  * Раньше высота была жёсткой, а svg растягивался по месту, и на
  * длинной странице все изгибы вытягивались по вертикали в несколько
@@ -53,7 +56,10 @@ function through(points: [number, number][]) {
 
 type Line = {
   d: string
-  speed: number
+  /* Насколько далеко штрихи убегут по линии за всю прокрутку
+     страницы. Своя длина у каждой линии: с одинаковой все двадцать
+     текли бы в ногу и читались одним сдвигающимся полотном */
+  run: number
   back: boolean
   dash: string
   width: number
@@ -120,7 +126,7 @@ function build(seed: number, height: number, screen: number, narrow: boolean): L
   const push = (pts: [number, number][], over: Partial<Line> = {}) => {
     out.push({
       d: through(pts),
-      speed: 10 + rnd() * 16,
+      run: -(320 + rnd() * 700),
       back: rnd() > 0.5,
       dash: '3 5',
       width: 0.8 + rnd() * 0.5,
@@ -252,7 +258,7 @@ export function Threads({ seed = 7 }: { seed?: number }) {
             d={p.d}
             className={p.warm ? 'threads__warm' : undefined}
             style={{
-              ['--dash-speed' as string]: `${p.speed.toFixed(1)}s`,
+              ['--dash-run' as string]: p.run.toFixed(0),
               ['--dash-dir' as string]: p.back ? 'reverse' : 'normal',
               strokeDasharray: p.dash,
               strokeWidth: p.width,
