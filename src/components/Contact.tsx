@@ -237,6 +237,25 @@ export function Footer() {
     { to: path('/rabota'), label: t(UI.hireName) },
   ]
 
+  /*
+    Спуск буквы.
+
+    Класс снимается, браузеру дают его применить, и он ставится
+    обратно: без этого повторное наведение на ту же букву, пока
+    движение ещё идёт, не перезапускает его — анимация с тем же
+    именем для браузера уже играет.
+
+    Снимает класс сам браузер по концу движения, поэтому следить
+    за таймерами не приходится.
+  */
+  function hit(e: React.PointerEvent<HTMLElement>) {
+    const ch = e.currentTarget.firstElementChild as HTMLElement | null
+    if (!ch) return
+    ch.classList.remove('is-hit')
+    void ch.offsetWidth
+    ch.classList.add('is-hit')
+  }
+
   return (
     <footer className="footer" ref={ref}>
       <div className="shell footer__top">
@@ -345,7 +364,12 @@ export function Footer() {
             ch === ' ' ? (
               <span className="footer__sign-gap" key={i} />
             ) : (
-              <span className="footer__sign-ch" key={i}>
+              <span
+                className="footer__sign-ch"
+                key={i}
+                onPointerEnter={hit}
+                onAnimationEnd={(e) => (e.target as HTMLElement).classList.remove('is-hit')}
+              >
                 <span>{ch}</span>
               </span>
             ),
